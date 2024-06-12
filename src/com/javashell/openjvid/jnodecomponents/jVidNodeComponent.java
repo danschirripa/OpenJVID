@@ -63,10 +63,25 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 		@Override
 		public void addOriginLinkage(JNodeComponent origin) throws IncorrectLinkageException {
+			if (origin instanceof jVidNodeComponent) {
+				jVidNodeComponent<?> comp = (jVidNodeComponent<?>) origin;
+				Object nodeContents = comp.getNode().retrieveNodeContents();
+				if (nodeContents instanceof ControlInterface) {
+					ControlInterface controlOrigin = (ControlInterface) nodeContents;
+					controlOrigin.addSubscriber((ControlInterface) node.retrieveNodeContents());
+				}
+			}
 		}
 
 		@Override
 		public void addChildLinkage(JNodeComponent child) throws IncorrectLinkageException {
+			if (child instanceof jVidNodeComponent) {
+				jVidNodeComponent<?> comp = (jVidNodeComponent<?>) child;
+				if (comp.getNode().retrieveNodeContents() instanceof ControlInterface) {
+					ControlInterface thisInterface = (ControlInterface) node.retrieveNodeContents();
+					((ControlInterface) comp.getNode().retrieveNodeContents()).addSubscriber(thisInterface);
+				}
+			}
 		}
 
 		@Override
