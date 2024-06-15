@@ -4,6 +4,7 @@ import javax.swing.JFrame;
 
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
+import com.javashell.openjvid.ui.AddComponentDialog;
 
 public class MainFrame extends JFrame{
 	private static final long serialVersionUID = -4865451275996292868L;
@@ -29,4 +30,7 @@ public class MainFrame extends JFrame{
 		handler = new MainFrameActionHandler(flowPane);
 	}
 
+	public void createAndShowAddComponentDialog() {
+		new AddComponentDialog(this,flowPane);
+	}
 }

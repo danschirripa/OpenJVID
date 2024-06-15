@@ -12,6 +12,7 @@ import com.javashell.flow.FlowNode;
 import com.javashell.flow.VideoFlowNode;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
+import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.camera.Camera;
 import com.javashell.video.camera.extras.AmcrestCameraInterface;
@@ -21,6 +22,7 @@ import com.javashell.video.ingestors.QOYStreamIngestor;
 
 public class IngestNodeFactory {
 
+	@TypeName(typeName = "NDI Ingest")
 	public static jVidNodeComponent<VideoProcessor> createNDI5Ingest(String ndiName, Dimension resolution,
 			JNodeFlowPane flowPane) {
 		NDI5Ingestor ingest = new NDI5Ingestor(resolution, ndiName);
@@ -30,9 +32,11 @@ public class IngestNodeFactory {
 		return ingestNode;
 	}
 
+	@TypeName(typeName = "Amcrest Ingest")
 	public static jVidNodeComponent<VideoProcessor> createAmcrestIngest(Dimension resolution, String user, String pass,
-			String ip, int bitrate, Camera cam, JNodeFlowPane flowPane)
+			String ip, int bitrate, String camType, JNodeFlowPane flowPane)
 			throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
+		Camera cam = Camera.getCamera(camType);
 		AmcrestCameraInterface amc = new AmcrestCameraInterface(resolution, user, pass, ip, bitrate, cam);
 		FlowNode<VideoProcessor> amcNode = new VideoFlowNode(amc, null, null);
 		jVidNodeComponent<VideoProcessor> amcNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, amcNode);
@@ -40,6 +44,7 @@ public class IngestNodeFactory {
 		return amcNodeComp;
 	}
 
+	@TypeName(typeName = "QOYV Ingest")
 	public static jVidNodeComponent<VideoProcessor> createQOYVStreamIngest(Dimension resolution, String ip, int port,
 			boolean isMulticast, JNodeFlowPane flowPane) {
 		QOYStreamIngestor qoyv = new QOYStreamIngestor(resolution, ip, port, isMulticast);
@@ -49,6 +54,7 @@ public class IngestNodeFactory {
 		return qoyvNodeComp;
 	}
 
+	@TypeName(typeName = "FFmpeg Ingest")
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(Dimension resolution, URL videoInput,
 			JNodeFlowPane flowPane) {
 		FFMPEGIngestor ffmpeg = new FFMPEGIngestor(resolution, videoInput);
@@ -58,6 +64,7 @@ public class IngestNodeFactory {
 		return ffmpegNodeComp;
 	}
 
+	@TypeName(typeName = "FFmpeg Ingest")
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(Dimension resolution, File videoInput,
 			JNodeFlowPane flowPane) {
 		FFMPEGIngestor ffmpeg = new FFMPEGIngestor(resolution, videoInput);
@@ -67,6 +74,7 @@ public class IngestNodeFactory {
 		return ffmpegNodeComp;
 	}
 
+	@TypeName(typeName = "FFmpeg Ingest")
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(Dimension resolution, String videoInput,
 			JNodeFlowPane flowPane) {
 		FFMPEGIngestor ffmpeg = new FFMPEGIngestor(resolution, videoInput);

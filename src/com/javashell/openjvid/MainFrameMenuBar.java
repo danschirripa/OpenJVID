@@ -14,18 +14,29 @@ public class MainFrameMenuBar extends JMenuBar {
 		JMenu fileMenu = new JMenu("File");
 		JMenu editMenu = new JMenu("Edit");
 		JMenu toolsMenu = new JMenu("Tools");
-		
+
 		// File Menu item setup
 		JMenuItem fileSave = new JMenuItem("Save");
 		JMenuItem fileLoad = new JMenuItem("Load");
-		JMenu loadRecent = new JMenu("Recent >");
-		
+		JMenu loadRecent = new JMenu("Recent");
+		fileMenu.add(fileSave);
+		fileMenu.add(fileLoad);
+		fileMenu.add(loadRecent);
+
 		// Edit Menu item setup
-		JMenuItem editAddComponent =  new JMenuItem("Add");
+		JMenuItem editAddComponent = new JMenuItem("Add");
 		JMenuItem editDeleteSelected = new JMenuItem("Delete");
-		JMenuItem editSelectedProperites = new JMenuItem("Edit");
-		
+		JMenuItem editSelectedProperties = new JMenuItem("Edit");
+		editMenu.add(editAddComponent);
+		editMenu.add(editDeleteSelected);
+		editMenu.add(editSelectedProperties);
+
 		// Tools Menu item setup
+
+		// Menu aggregation
+		add(fileMenu);
+		add(editMenu);
+		add(toolsMenu);
 	}
 
 }

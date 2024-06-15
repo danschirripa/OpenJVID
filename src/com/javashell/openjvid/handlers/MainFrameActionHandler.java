@@ -6,12 +6,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
+import javax.swing.SwingUtilities;
+
 import com.javashell.jnodegraph.JNodeFlowPane;
 
-public class MainFrameActionHandler implements MouseListener, MouseMotionListener, ActionListener{
-	
+public class MainFrameActionHandler implements MouseListener, MouseMotionListener, ActionListener {
+
 	private final JNodeFlowPane flowPane;
-	
+
 	public MainFrameActionHandler(JNodeFlowPane flowPane) {
 		this.flowPane = flowPane;
 	}
@@ -21,33 +23,34 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 	}
 
 	@Override
-	public void mouseDragged(MouseEvent e) {		
+	public void mouseDragged(MouseEvent e) {
 	}
 
 	@Override
-	public void mouseMoved(MouseEvent e) {		
+	public void mouseMoved(MouseEvent e) {
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent e) {		
+	public void mouseClicked(MouseEvent e) {
+		if (SwingUtilities.isRightMouseButton(e)) {
+
+		}
 	}
 
 	@Override
-	public void mousePressed(MouseEvent e) {		
+	public void mousePressed(MouseEvent e) {
 	}
 
 	@Override
-	public void mouseReleased(MouseEvent e) {		
+	public void mouseReleased(MouseEvent e) {
 	}
 
 	@Override
-	public void mouseEntered(MouseEvent e) {		
+	public void mouseEntered(MouseEvent e) {
 	}
 
 	@Override
-	public void mouseExited(MouseEvent e) {		
+	public void mouseExited(MouseEvent e) {
 	}
-	
-	
 
 }

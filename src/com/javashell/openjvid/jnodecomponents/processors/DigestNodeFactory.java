@@ -6,6 +6,7 @@ import com.javashell.flow.FlowNode;
 import com.javashell.flow.VideoFlowNode;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
+import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.digestors.AutoFramingDigestor;
 import com.javashell.video.digestors.FaceSetPaintingDigestor;
@@ -14,6 +15,7 @@ import com.javashell.video.digestors.MultiviewDigestor;
 
 public class DigestNodeFactory {
 
+	@TypeName(typeName = "AutoFraming Digest")
 	public static jVidNodeComponent<VideoProcessor> createAutoFramingDigestor(Dimension resolution,
 			JNodeFlowPane flowPane) {
 		AutoFramingDigestor autoFraming = new AutoFramingDigestor(resolution);
@@ -23,6 +25,7 @@ public class DigestNodeFactory {
 		return autoFramingNodeComp;
 	}
 
+	@TypeName(typeName = "FacePaint Digest")
 	public static jVidNodeComponent<VideoProcessor> createFaceSetPaintingDigestor(Dimension resolution,
 			JNodeFlowPane flowPane) {
 		FaceSetPaintingDigestor facePaint = new FaceSetPaintingDigestor(resolution);
@@ -32,12 +35,14 @@ public class DigestNodeFactory {
 		return facePaintNodeComp;
 	}
 
+	@TypeName(typeName = "Matrix Digest")
 	public static jVidNodeComponent<VideoProcessor> createMatrixDigestor(Dimension resolution, JNodeFlowPane flowPane) {
 		MatrixDigestor matrix = new MatrixDigestor();
 		jVidNodeComponent<VideoProcessor> matrixNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, matrix);
 		return matrixNodeComp;
 	}
 
+	@TypeName(typeName = "Multiview Digest")
 	public static jVidNodeComponent<VideoProcessor> createMultiviewDigestor(Dimension resolution, int viewports,
 			int rows, int cols, JNodeFlowPane flowPane) {
 		MultiviewDigestor multi = new MultiviewDigestor(resolution, viewports, rows, cols);
