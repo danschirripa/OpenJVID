@@ -4,9 +4,13 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
-public class MainFrameMenuBar extends JMenuBar {
+import com.javashell.openjvid.handlers.MainFrameActionHandler;
 
-	public MainFrameMenuBar() {
+public class MainFrameMenuBar extends JMenuBar {
+	private MainFrameActionHandler handler;
+
+	public MainFrameMenuBar(MainFrameActionHandler handler) {
+		this.handler = handler;
 		createMenuBar();
 	}
 
@@ -23,6 +27,14 @@ public class MainFrameMenuBar extends JMenuBar {
 		fileMenu.add(fileLoad);
 		fileMenu.add(loadRecent);
 
+		fileSave.setActionCommand(MainFrameActionHandler.FILESAVE);
+		fileSave.addActionListener(handler);
+
+		fileLoad.setActionCommand(MainFrameActionHandler.FILELOAD);
+		fileLoad.addActionListener(handler);
+
+		// TODO Add recent's menu
+
 		// Edit Menu item setup
 		JMenuItem editAddComponent = new JMenuItem("Add");
 		JMenuItem editDeleteSelected = new JMenuItem("Delete");
@@ -30,6 +42,15 @@ public class MainFrameMenuBar extends JMenuBar {
 		editMenu.add(editAddComponent);
 		editMenu.add(editDeleteSelected);
 		editMenu.add(editSelectedProperties);
+
+		editAddComponent.setActionCommand(MainFrameActionHandler.ADD);
+		editAddComponent.addActionListener(handler);
+
+		editDeleteSelected.setActionCommand(MainFrameActionHandler.DELETE);
+		editDeleteSelected.addActionListener(handler);
+
+		editSelectedProperties.setActionCommand(MainFrameActionHandler.EDITPROPS);
+		editSelectedProperties.addActionListener(handler);
 
 		// Tools Menu item setup
 

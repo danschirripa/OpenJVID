@@ -70,7 +70,7 @@ public class MainTest {
 		FlowController.registerFlowNode(amcNode);
 
 		ingest.open();
-		qoyv.open();
+		//qoyv.open();
 		preview.open();
 
 		FlowController.startFlowControl();

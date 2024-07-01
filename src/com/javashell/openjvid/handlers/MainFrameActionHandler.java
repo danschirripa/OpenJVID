@@ -9,17 +9,37 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.SwingUtilities;
 
 import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.openjvid.MainFrame;
 
 public class MainFrameActionHandler implements MouseListener, MouseMotionListener, ActionListener {
 
-	private final JNodeFlowPane flowPane;
+	public static final String ADD = "ADD", DELETE = "DELETE", EDITPROPS = "EDIT_PROPS", FILESAVE = "FILE_SAVE,",
+			FILELOAD = "FILE_LOAD";
 
-	public MainFrameActionHandler(JNodeFlowPane flowPane) {
+	private final JNodeFlowPane flowPane;
+	private final MainFrame frame;
+
+	public MainFrameActionHandler(JNodeFlowPane flowPane, MainFrame frame) {
 		this.flowPane = flowPane;
+		this.frame = frame;
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+
+		switch (e.getActionCommand()) {
+		case ADD:
+			frame.createAndShowAddComponentDialog();
+			break;
+		case DELETE:
+			break;
+		case EDITPROPS:
+			break;
+		case FILESAVE:
+			break;
+		case FILELOAD:
+			break;
+		}
 	}
 
 	@Override
