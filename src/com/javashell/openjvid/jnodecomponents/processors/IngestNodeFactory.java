@@ -77,7 +77,7 @@ public class IngestNodeFactory {
 		return qoyvNodeComp;
 	}
 
-	@TypeName(typeName = "FFmpeg Ingest")
+	@TypeName(typeName = "FFmpeg Ingest (URL)")
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "URL") URL videoInput,
 			JNodeFlowPane flowPane) {
@@ -92,7 +92,7 @@ public class IngestNodeFactory {
 		return ffmpegNodeComp;
 	}
 
-	@TypeName(typeName = "FFmpeg Ingest")
+	@TypeName(typeName = "FFmpeg Ingest (File)")
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "File Path") File videoInput,
 			JNodeFlowPane flowPane) {
@@ -107,7 +107,7 @@ public class IngestNodeFactory {
 		return ffmpegNodeComp;
 	}
 
-	@TypeName(typeName = "FFmpeg Ingest")
+	@TypeName(typeName = "FFmpeg Ingest (String)")
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "FFmpeg Input String") String videoInput,
 			JNodeFlowPane flowPane) {

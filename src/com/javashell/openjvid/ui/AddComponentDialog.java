@@ -11,6 +11,7 @@ import java.awt.event.ItemListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -31,14 +32,17 @@ import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotatio
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.openjvid.ui.components.DimensionInputComponent;
+import com.javashell.openjvid.ui.components.IntegerInputComponent;
 import com.javashell.openjvid.ui.components.StringInputComponent;
+import com.javashell.openjvid.ui.components.URLInputComponent;
 
 public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
 
-	public final static String[] componentTypes = { "NDI Ingest", "QOYV Ingest", "FFmpeg Ingest", "Amcrest Ingest",
-			"AutoFraming Digest", "Face Detector", "FacePaint Digest", "Matrix Digest", "Multiview Digest", "NDI Egress", "QOYV Egress",
-			"FFmpeg Egress", "Preview Frame" };
+	public final static String[] componentTypes = { "NDI Ingest", "QOYV Ingest", "FFmpeg Ingest (URL)",
+			"FFmpeg Ingest (File)", "FFmpeg Ingest (String)", "Amcrest Ingest", "AutoFraming Digest", "Face Detector",
+			"FacePaint Digest", "Matrix Digest", "Multiview Digest", "NDI Egress", "QOYV Egress", "FFmpeg Egress",
+			"Preview Frame" };
 
 	public final static HashMap<String, Method> callBackMethods;
 
@@ -119,6 +123,7 @@ public class AddComponentDialog extends JDialog {
 		pack();
 	}
 
+	@SuppressWarnings("deprecation")
 	private JPanel generateInputPanel(Method m) {
 		JPanel inputPanel = new JPanel();
 		BoxLayout layout = new BoxLayout(inputPanel, BoxLayout.PAGE_AXIS);
@@ -158,7 +163,38 @@ public class AddComponentDialog extends JDialog {
 				};
 			}
 
-			if (param.isInstance(Integer.valueOf(1))) {
+			try {
+				if (param.isInstance(new URL("https://google.com"))) {
+					URLInputComponent inputComponent = new URLInputComponent(label);
+					inputPanel.add(inputComponent);
+					paramActions[index] = new AbstractAction() {
+
+						private static final long serialVersionUID = 460808087052007952L;
+
+						public void actionPerformed(ActionEvent e) {
+							try {
+								parameterValues.put(p, inputComponent.getURL());
+							} catch (Exception e1) {
+								e1.printStackTrace();
+							}
+						}
+					};
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (param.isAssignableFrom(int.class)) {
+				IntegerInputComponent inputComponent = new IntegerInputComponent(label);
+				inputPanel.add(inputComponent);
+				paramActions[index] = new AbstractAction() {
+
+					private static final long serialVersionUID = 8781780707545614243L;
+
+					public void actionPerformed(ActionEvent e) {
+						parameterValues.put(p, inputComponent.getInt());
+					}
+				};
 			}
 
 			if (param.isInstance(new Dimension())) {

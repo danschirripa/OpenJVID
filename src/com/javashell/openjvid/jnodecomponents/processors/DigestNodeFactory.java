@@ -4,10 +4,14 @@ import java.awt.Dimension;
 
 import com.javashell.flow.FlowNode;
 import com.javashell.flow.VideoFlowNode;
+import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.jnodegraph.NodeType;
+import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
+import com.javashell.openjvid.ui.MatrixDigestorCrosspointDialog;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.digestors.AutoFramingDigestor;
 import com.javashell.video.digestors.FaceSetPaintingDigestor;
@@ -24,6 +28,8 @@ public class DigestNodeFactory {
 		FlowNode<VideoProcessor> autoFramingNode = new VideoFlowNode(autoFraming, null, null);
 		jVidNodeComponent<VideoProcessor> autoFramingNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane,
 				autoFramingNode);
+		autoFramingNodeComp.setNodeType(NodeType.Transceiver);
+		autoFramingNodeComp.setNodeName("AutoFraming");
 
 		autoFraming.open();
 
@@ -37,6 +43,8 @@ public class DigestNodeFactory {
 		FlowNode<VideoProcessor> facePaintNode = new VideoFlowNode(facePaint, null, null);
 		jVidNodeComponent<VideoProcessor> facePaintNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane,
 				facePaintNode);
+		facePaintNodeComp.setNodeType(NodeType.Transceiver);
+		facePaintNodeComp.setNodeName("FaceSet Painter");
 
 		facePaint.open();
 
@@ -47,7 +55,53 @@ public class DigestNodeFactory {
 	public static jVidNodeComponent<VideoProcessor> createMatrixDigestor(
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		MatrixDigestor matrix = new MatrixDigestor();
-		jVidNodeComponent<VideoProcessor> matrixNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, matrix);
+
+		final MatrixDigestorCrosspointDialog crosspointDialog = new MatrixDigestorCrosspointDialog();
+		jVidNodeComponent<VideoProcessor> matrixNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, matrix) {
+
+			private static final long serialVersionUID = 3800957082229059177L;
+
+			@Override
+			public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
+				System.out.println("OVERRIDE - ADD ORIGIN");
+				
+				if(cascade)
+					origin.addChildLinkage(this, false);
+				
+				if (origin.getNodeType() == NodeType.Transmitter)
+					crosspointDialog.addSource((jVidNodeComponent<VideoProcessor>) origin);
+				else if (origin.getNodeType() == NodeType.Transceiver)
+					crosspointDialog.addTransceiver((jVidNodeComponent<VideoProcessor>) origin);
+			}
+
+			@Override
+			public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
+				System.out.println("OVERRIDE - ADD CHILD");
+				
+				if(cascade)
+					child.addOriginLinkage(this, false);
+
+				if (child.getNodeType() == NodeType.Receiver)
+					crosspointDialog.addSink((jVidNodeComponent<VideoProcessor>) child);
+				else if (child.getNodeType() == NodeType.Transceiver)
+					crosspointDialog.addTransceiver((jVidNodeComponent<VideoProcessor>) child);
+			}
+
+			@Override
+			public void removeChildLinkage(JNodeComponent child) {
+				crosspointDialog.removeComponent((jVidNodeComponent<VideoProcessor>) child);
+			}
+
+			@Override
+			public void removeOriginLinkage(JNodeComponent origin) {
+				crosspointDialog.removeComponent((jVidNodeComponent<VideoProcessor>) origin);
+			}
+		};
+		crosspointDialog.setMatrix(matrix);
+
+		matrixNodeComp.setNodeType(NodeType.Transceiver);
+		matrixNodeComp.setNodeName("Matrix");
+		matrixNodeComp.setComponentPopupMenu(crosspointDialog.getCrosspointJMenu());
 
 		return matrixNodeComp;
 	}
@@ -60,6 +114,9 @@ public class DigestNodeFactory {
 		FlowNode<VideoProcessor> multiNode = new VideoFlowNode(multi, null, null);
 		jVidNodeComponent<VideoProcessor> multiNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, multiNode);
 
+		multiNodeComp.setNodeType(NodeType.Transceiver);
+		multiNodeComp.setNodeName("Multiview");
+
 		multi.open();
 
 		return multiNodeComp;
@@ -71,6 +128,9 @@ public class DigestNodeFactory {
 		OpenCVDeepLearningFaceDetectorDigestor detector = new OpenCVDeepLearningFaceDetectorDigestor(resolution);
 		FlowNode<VideoProcessor> detectNode = new VideoFlowNode(detector, null, null);
 		jVidNodeComponent<VideoProcessor> detectNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, detectNode);
+
+		detectNodeComp.setNodeType(NodeType.Transceiver);
+		detectNodeComp.setNodeName("Face Detector");
 
 		detector.open();
 

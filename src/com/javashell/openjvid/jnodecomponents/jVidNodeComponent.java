@@ -1,10 +1,19 @@
 package com.javashell.openjvid.jnodecomponents;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+
 import com.javashell.flow.FlowNode;
+import com.javashell.flow.VideoFlowNode;
 import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
+import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.video.ControlInterface;
+import com.javashell.video.digestors.MatrixDigestor;
 
 public class jVidNodeComponent<T> extends JNodeComponent {
 	private final FlowNode<T> node;
@@ -18,12 +27,44 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 			hasControlInterface = true;
 			addNodePoint(new jVidControlNodePoint(flow, this));
 		}
+
+	}
+
+	private JMenu createPopupMenu(JNodeFlowPane ha) {
+		JMenu editMenu = new JMenu();
+
+		JMenuItem editDeleteSelected = new JMenuItem("Delete");
+		JMenuItem editSelectedProperties = new JMenuItem("Edit");
+		editMenu.add(editDeleteSelected);
+		editMenu.add(editSelectedProperties);
+
+		ActionListener menuListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				switch (e.getActionCommand()) {
+				case MainFrameActionHandler.DELETE:
+					break;
+				case MainFrameActionHandler.EDITPROPS:
+					break;
+				}
+			}
+		};
+
+		editDeleteSelected.setActionCommand(MainFrameActionHandler.DELETE);
+		editDeleteSelected.addActionListener(menuListener);
+
+		editSelectedProperties.setActionCommand(MainFrameActionHandler.EDITPROPS);
+		editSelectedProperties.addActionListener(menuListener);
+		return editMenu;
 	}
 
 	@Override
-	public void addOriginLinkage(JNodeComponent origin) throws IncorrectLinkageException {
+	public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
 		if (origin instanceof jVidNodeComponent) {
 			jVidNodeComponent originNode = (jVidNodeComponent) origin;
+
+			if (cascade)
+				origin.addChildLinkage(this, false);
+
 			node.setIngestSourceNode(originNode.getNode());
 			originNode.getNode().setEgressDestinationNode(node);
 		} else {
@@ -32,9 +73,12 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 	}
 
 	@Override
-	public void addChildLinkage(JNodeComponent child) throws IncorrectLinkageException {
+	public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
 		if (child instanceof jVidNodeComponent) {
 			jVidNodeComponent comp = (jVidNodeComponent) child;
+
+			if (cascade)
+				child.addOriginLinkage(this, false);
 			node.setEgressDestinationNode(comp.getNode());
 		} else {
 			throw new IncorrectLinkageException();
@@ -62,7 +106,7 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		}
 
 		@Override
-		public void addOriginLinkage(JNodeComponent origin) throws IncorrectLinkageException {
+		public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
 			if (origin instanceof jVidNodeComponent) {
 				jVidNodeComponent<?> comp = (jVidNodeComponent<?>) origin;
 				Object nodeContents = comp.getNode().retrieveNodeContents();
@@ -74,7 +118,7 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		}
 
 		@Override
-		public void addChildLinkage(JNodeComponent child) throws IncorrectLinkageException {
+		public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
 			if (child instanceof jVidNodeComponent) {
 				jVidNodeComponent<?> comp = (jVidNodeComponent<?>) child;
 				if (comp.getNode().retrieveNodeContents() instanceof ControlInterface) {

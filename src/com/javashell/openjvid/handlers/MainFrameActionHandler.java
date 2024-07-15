@@ -10,6 +10,8 @@ import javax.swing.SwingUtilities;
 
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.MainFrame;
+import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
+import com.javashell.video.VideoProcessor;
 
 public class MainFrameActionHandler implements MouseListener, MouseMotionListener, ActionListener {
 
@@ -32,6 +34,8 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 			frame.createAndShowAddComponentDialog();
 			break;
 		case DELETE:
+			((jVidNodeComponent<VideoProcessor>) flowPane.getSelection()).getNode().retrieveNodeContents().close();
+			flowPane.remove(flowPane.getSelection());
 			break;
 		case EDITPROPS:
 			break;
