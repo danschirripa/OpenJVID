@@ -18,6 +18,7 @@ import com.javashell.video.digestors.FaceSetPaintingDigestor;
 import com.javashell.video.digestors.MatrixDigestor;
 import com.javashell.video.digestors.MultiviewDigestor;
 import com.javashell.video.digestors.OpenCVDeepLearningFaceDetectorDigestor;
+import com.javashell.video.digestors.ScalingDigestor;
 
 public class DigestNodeFactory {
 
@@ -64,10 +65,10 @@ public class DigestNodeFactory {
 			@Override
 			public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
 				System.out.println("OVERRIDE - ADD ORIGIN");
-				
-				if(cascade)
+
+				if (cascade)
 					origin.addChildLinkage(this, false);
-				
+
 				if (origin.getNodeType() == NodeType.Transmitter)
 					crosspointDialog.addSource((jVidNodeComponent<VideoProcessor>) origin);
 				else if (origin.getNodeType() == NodeType.Transceiver)
@@ -77,8 +78,8 @@ public class DigestNodeFactory {
 			@Override
 			public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
 				System.out.println("OVERRIDE - ADD CHILD");
-				
-				if(cascade)
+
+				if (cascade)
 					child.addOriginLinkage(this, false);
 
 				if (child.getNodeType() == NodeType.Receiver)
@@ -120,6 +121,22 @@ public class DigestNodeFactory {
 		multi.open();
 
 		return multiNodeComp;
+	}
+
+	@TypeName(typeName = "Scaling Digest")
+	public static jVidNodeComponent<VideoProcessor> createScalingDigestor(
+			@Label(label = "Input Resolution") Dimension resolution,
+			@Label(label = "Output Resolution") Dimension outputResolution, JNodeFlowPane flowPane) {
+		ScalingDigestor scaler = new ScalingDigestor(resolution, outputResolution);
+		FlowNode<VideoProcessor> scalerNode = new VideoFlowNode(scaler, null, null);
+		jVidNodeComponent<VideoProcessor> scalerNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, scalerNode);
+		
+		scalerNodeComp.setNodeType(NodeType.Transceiver);
+		scalerNodeComp.setNodeName("Scaler");
+		
+		scaler.open();
+		
+		return scalerNodeComp;
 	}
 
 	@TypeName(typeName = "Face Detector")

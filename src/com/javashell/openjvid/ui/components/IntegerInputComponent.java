@@ -18,6 +18,7 @@ public class IntegerInputComponent extends JPanel {
 		inputLabel = new JLabel(label);
 
 		NumberFormat format = NumberFormat.getInstance();
+		format.setGroupingUsed(false);
 		NumberFormatter formatter = new NumberFormatter(format);
 		formatter.setValueClass(Integer.class);
 		formatter.setMinimum(0);

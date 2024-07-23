@@ -63,7 +63,9 @@ public class IngestNodeFactory {
 	@TypeName(typeName = "QOYV Ingest")
 	public static jVidNodeComponent<VideoProcessor> createQOYVStreamIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "IP") String ip,
-			@Label(label = "Port") int port, @Label(label = "Multicast") boolean isMulticast, JNodeFlowPane flowPane) {
+			@Label(label = "Port") int port, JNodeFlowPane flowPane) {
+		
+		var isMulticast = false;
 		QOYStreamIngestor qoyv = new QOYStreamIngestor(resolution, ip, port, isMulticast);
 		FlowNode<VideoProcessor> qoyvNode = new VideoFlowNode(qoyv, null, null);
 		jVidNodeComponent<VideoProcessor> qoyvNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, qoyvNode);
@@ -97,6 +99,25 @@ public class IngestNodeFactory {
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "File Path") File videoInput,
 			JNodeFlowPane flowPane) {
 		FFMPEGIngestor ffmpeg = new FFMPEGIngestor(resolution, videoInput);
+		FlowNode<VideoProcessor> ffmpegNode = new VideoFlowNode(ffmpeg, null, null);
+		jVidNodeComponent<VideoProcessor> ffmpegNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ffmpegNode);
+		FlowController.registerFlowNode(ffmpegNode);
+		ffmpegNodeComp.setNodeType(NodeType.Transmitter);
+
+		ffmpeg.open();
+
+		return ffmpegNodeComp;
+	}
+
+	@TypeName(typeName = "FFmpeg Ingest (Video Device)")
+	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
+			@Label(label = "Resolution") Dimension resolution, @Label(label = "Device Path") File videoInput,
+			@Label(label = "Codec") String codec, @Label(label = "Framerate") int frameRate, JNodeFlowPane flowPane) {
+		FFMPEGIngestor ffmpeg = new FFMPEGIngestor(resolution, videoInput);
+		ffmpeg.setFrameRate(frameRate);
+		ffmpeg.setOption("input_format", codec);
+		ffmpeg.setOption("video_size", resolution.width + "x"+resolution.height);
+		
 		FlowNode<VideoProcessor> ffmpegNode = new VideoFlowNode(ffmpeg, null, null);
 		jVidNodeComponent<VideoProcessor> ffmpegNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ffmpegNode);
 		FlowController.registerFlowNode(ffmpegNode);

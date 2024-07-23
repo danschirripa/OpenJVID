@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -32,6 +33,7 @@ import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotatio
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.openjvid.ui.components.DimensionInputComponent;
+import com.javashell.openjvid.ui.components.FileInputComponent;
 import com.javashell.openjvid.ui.components.IntegerInputComponent;
 import com.javashell.openjvid.ui.components.StringInputComponent;
 import com.javashell.openjvid.ui.components.URLInputComponent;
@@ -40,9 +42,9 @@ public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
 
 	public final static String[] componentTypes = { "NDI Ingest", "QOYV Ingest", "FFmpeg Ingest (URL)",
-			"FFmpeg Ingest (File)", "FFmpeg Ingest (String)", "Amcrest Ingest", "AutoFraming Digest", "Face Detector",
+			"FFmpeg Ingest (File)", "FFmpeg Ingest (Video Device)", "FFmpeg Ingest (String)", "Amcrest Ingest", "AutoFraming Digest", "Face Detector",
 			"FacePaint Digest", "Matrix Digest", "Multiview Digest", "NDI Egress", "QOYV Egress", "FFmpeg Egress",
-			"Preview Frame" };
+			"Preview Frame", "Scaling Digest" };
 
 	public final static HashMap<String, Method> callBackMethods;
 
@@ -206,6 +208,18 @@ public class AddComponentDialog extends JDialog {
 
 					public void actionPerformed(ActionEvent e) {
 						parameterValues.put(p, inputComponent.getDimension());
+					}
+				};
+			}
+			
+			if(param.isInstance(new File(""))) {
+				FileInputComponent inputComponent = new FileInputComponent(label);
+				inputPanel.add(inputComponent);
+				paramActions[index] = new AbstractAction() {
+					private static final long serialVersionUID = -2839715408638790225L;
+
+					public void actionPerformed(ActionEvent e) {
+						parameterValues.put(p,  inputComponent.getFile());
 					}
 				};
 			}

@@ -12,6 +12,7 @@ import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.Type
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.egressors.LocalWindowEgressor;
 import com.javashell.video.egressors.NDI5Egressor;
+import com.javashell.video.egressors.QOYStreamEgressor;
 
 public class EgressNodeFactory {
 
@@ -43,5 +44,20 @@ public class EgressNodeFactory {
 		ndi.open();
 
 		return ndiNodeComp;
+	}
+
+	@TypeName(typeName = "QOYV Egress")
+	public static jVidNodeComponent<VideoProcessor> createQOYVEgress(@Label(label = "Resolution") Dimension resolution,
+			@Label(label = "Key Frame Interval") int keyFrameInterval, JNodeFlowPane flowPane) {
+		QOYStreamEgressor qoyv = new QOYStreamEgressor(resolution, keyFrameInterval);
+		FlowNode<VideoProcessor> qoyvNode = new VideoFlowNode(qoyv, null, null);
+		jVidNodeComponent<VideoProcessor> qoyvNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, qoyvNode);
+		qoyvNodeComp.setNodeType(NodeType.Receiver);
+
+		qoyvNodeComp.setNodeName("QOYV Egress");
+
+		qoyv.open();
+
+		return qoyvNodeComp;
 	}
 }

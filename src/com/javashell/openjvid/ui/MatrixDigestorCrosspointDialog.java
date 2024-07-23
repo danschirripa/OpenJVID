@@ -3,9 +3,12 @@ package com.javashell.openjvid.ui;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.HashSet;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -20,6 +23,8 @@ public class MatrixDigestorCrosspointDialog extends JDialog {
 	private MatrixDigestor matrix;
 	private final HashSet<jVidNodeComponent<VideoProcessor>> sources, sinks, transceivers;
 	private JPopupMenu popupMenu;
+	
+	private JPanel lastCrosspointPanel;
 
 	public MatrixDigestorCrosspointDialog() {
 		sources = new HashSet<jVidNodeComponent<VideoProcessor>>();
@@ -36,6 +41,40 @@ public class MatrixDigestorCrosspointDialog extends JDialog {
 			}
 		});
 		popupMenu.add(editCrosspoints);
+		
+		addWindowListener(new WindowListener() {
+
+			@Override
+			public void windowOpened(WindowEvent e) {				
+			}
+
+			@Override
+			public void windowClosing(WindowEvent e) {				
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				remove(lastCrosspointPanel);
+				lastCrosspointPanel = null;
+			}
+
+			@Override
+			public void windowIconified(WindowEvent e) {				
+			}
+
+			@Override
+			public void windowDeiconified(WindowEvent e) {				
+			}
+
+			@Override
+			public void windowActivated(WindowEvent e) {				
+			}
+
+			@Override
+			public void windowDeactivated(WindowEvent e) {				
+			}
+			
+		});
 	}
 
 	public void setMatrix(MatrixDigestor matrix) {

@@ -13,6 +13,7 @@ import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.video.ControlInterface;
+import com.javashell.video.VideoProcessor;
 import com.javashell.video.digestors.MatrixDigestor;
 
 public class jVidNodeComponent<T> extends JNodeComponent {
@@ -107,9 +108,9 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 		@Override
 		public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
-			if (origin instanceof jVidNodeComponent) {
-				jVidNodeComponent<?> comp = (jVidNodeComponent<?>) origin;
-				Object nodeContents = comp.getNode().retrieveNodeContents();
+			if (origin instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
+				jVidNodeComponent<?>.jVidControlNodePoint comp = (jVidNodeComponent<?>.jVidControlNodePoint) origin;
+				Object nodeContents = ((jVidNodeComponent<?>)comp.getParentNodeComponent()).getNode().retrieveNodeContents();
 				if (nodeContents instanceof ControlInterface) {
 					ControlInterface controlOrigin = (ControlInterface) nodeContents;
 					controlOrigin.addSubscriber((ControlInterface) node.retrieveNodeContents());
@@ -119,17 +120,18 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 		@Override
 		public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
-			if (child instanceof jVidNodeComponent) {
-				jVidNodeComponent<?> comp = (jVidNodeComponent<?>) child;
-				if (comp.getNode().retrieveNodeContents() instanceof ControlInterface) {
+			if (child instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
+				jVidNodeComponent<?>.jVidControlNodePoint comp = (jVidNodeComponent<?>.jVidControlNodePoint) child;
+				if (((jVidNodeComponent<?>)comp.getParentNodeComponent()).getNode().retrieveNodeContents() instanceof ControlInterface) {
 					ControlInterface thisInterface = (ControlInterface) node.retrieveNodeContents();
-					((ControlInterface) comp.getNode().retrieveNodeContents()).addSubscriber(thisInterface);
+					((ControlInterface) ((jVidNodeComponent<?>)comp.getParentNodeComponent()).getNode().retrieveNodeContents()).addSubscriber(thisInterface);
 				}
 			}
 		}
 
 		@Override
 		public void removeChildLinkage(JNodeComponent child) {
+			
 		}
 
 		@Override
