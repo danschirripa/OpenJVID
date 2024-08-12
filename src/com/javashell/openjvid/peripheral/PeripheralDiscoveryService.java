@@ -30,7 +30,6 @@ public class PeripheralDiscoveryService {
 	public static final String ADDRESS = "224.0.1.200";
 	private static String localJsonDescriptor;
 	private static MulticastSocket socket;
-	private static DatagramSocket senderSocket;
 	private static Thread mCastThread;
 	private static Thread tcpThread;
 	private static Timer mCastAdvertisementTimer;
@@ -41,7 +40,6 @@ public class PeripheralDiscoveryService {
 	public static void initializeService() throws IOException {
 		InetSocketAddress sa = new InetSocketAddress(ADDRESS, PORT);
 		socket = new MulticastSocket(PORT);
-		senderSocket = new DatagramSocket();
 		Stream<NetworkInterface> nics = NetworkInterface.networkInterfaces();
 		Iterator<NetworkInterface> nicIter = nics.iterator();
 		while (nicIter.hasNext()) {
@@ -53,7 +51,7 @@ public class PeripheralDiscoveryService {
 				System.err.println("Failed to join on " + nic.getDisplayName());
 			}
 		}
-		
+
 		socket.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false);
 
 		advertisementData[0] = 'O';
@@ -119,7 +117,7 @@ public class PeripheralDiscoveryService {
 		tcpThread.start();
 
 		final DatagramPacket packet = new DatagramPacket(advertisementData, 16, InetAddress.getByName(ADDRESS), PORT);
-		
+
 		TimerTask advertisementTask = new TimerTask() {
 
 			@Override
