@@ -3,6 +3,7 @@ package com.javashell.openjvid.peripheral;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
@@ -27,6 +28,7 @@ public class PeripheralDiscoveryService {
 	public static final String ADDRESS = "224.0.1.200";
 	private static String localJsonDescriptor;
 	private static MulticastSocket socket;
+	private static DatagramSocket senderSocket;
 	private static Thread mCastThread;
 	private static Thread tcpThread;
 	private static Timer mCastAdvertisementTimer;
@@ -36,11 +38,14 @@ public class PeripheralDiscoveryService {
 
 	public static void initializeService() throws IOException {
 		SocketAddress sa = new InetSocketAddress(ADDRESS, PORT);
-		socket = new MulticastSocket(sa);
+		socket = new MulticastSocket();
+		senderSocket = new DatagramSocket();
 		Stream<NetworkInterface> nics = NetworkInterface.networkInterfaces();
 		Iterator<NetworkInterface> nicIter = nics.iterator();
 		while (nicIter.hasNext()) {
-			socket.joinGroup(sa, nicIter.next());
+			final NetworkInterface nic = nicIter.next();
+			socket.joinGroup(sa, nic);
+			System.out.println("Joined " + nic.getDisplayName());
 		}
 
 		advertisementData[0] = 'O';
@@ -105,21 +110,22 @@ public class PeripheralDiscoveryService {
 		tcpThread.setName("OpenJVID - Peripheral Communication");
 		tcpThread.start();
 
-		final DatagramPacket packet = new DatagramPacket(advertisementData, 16);
+		final DatagramPacket packet = new DatagramPacket(advertisementData, 16, InetAddress.getByName(ADDRESS), PORT);
 
 		TimerTask advertisementTask = new TimerTask() {
 
 			@Override
 			public void run() {
 				try {
-					socket.send(packet);
+					senderSocket.send(packet);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 
 		};
-		mCastAdvertisementTimer.scheduleAtFixedRate(advertisementTask, 0, 10000);
+		mCastAdvertisementTimer = new Timer();
+		mCastAdvertisementTimer.scheduleAtFixedRate(advertisementTask, 0, 5000);
 	}
 
 	private static void parsePacket(DatagramPacket packet) throws IOException {
