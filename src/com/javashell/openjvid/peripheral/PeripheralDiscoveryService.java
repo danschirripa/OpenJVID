@@ -11,6 +11,8 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketOptions;
+import java.net.StandardSocketOptions;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -51,6 +53,8 @@ public class PeripheralDiscoveryService {
 				System.err.println("Failed to join on " + nic.getDisplayName());
 			}
 		}
+		
+		socket.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false);
 
 		advertisementData[0] = 'O';
 		advertisementData[1] = 'p';
@@ -115,13 +119,14 @@ public class PeripheralDiscoveryService {
 		tcpThread.start();
 
 		final DatagramPacket packet = new DatagramPacket(advertisementData, 16, InetAddress.getByName(ADDRESS), PORT);
-
+		
 		TimerTask advertisementTask = new TimerTask() {
 
 			@Override
 			public void run() {
 				try {
-					senderSocket.send(packet);
+					System.out.println("Advert");
+					socket.send(packet);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -133,6 +138,7 @@ public class PeripheralDiscoveryService {
 	}
 
 	private static void parsePacket(DatagramPacket packet) throws IOException {
+		System.out.println("RECEIVED " + packet.getAddress().getCanonicalHostName());
 		final InetAddress sourceAddress = packet.getAddress();
 		final byte[] data = packet.getData();
 		if (Arrays.equals(data, advertisementData) && !discoveredPeripherals.containsKey(sourceAddress)) {
