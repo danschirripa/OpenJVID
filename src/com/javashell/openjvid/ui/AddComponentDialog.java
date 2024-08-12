@@ -125,7 +125,7 @@ public class AddComponentDialog extends JDialog {
 		pack();
 	}
 
-	@SuppressWarnings("deprecation")
+	//@SuppressWarnings("deprecation")
 	private JPanel generateInputPanel(Method m) {
 		JPanel inputPanel = new JPanel();
 		BoxLayout layout = new BoxLayout(inputPanel, BoxLayout.PAGE_AXIS);

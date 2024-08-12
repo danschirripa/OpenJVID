@@ -37,8 +37,8 @@ public class PeripheralDiscoveryService {
 	private static final Hashtable<InetAddress, PeripheralDescriptor> discoveredPeripherals = new Hashtable<InetAddress, PeripheralDescriptor>();
 
 	public static void initializeService() throws IOException {
-		SocketAddress sa = new InetSocketAddress(ADDRESS, PORT);
-		socket = new MulticastSocket();
+		InetSocketAddress sa = new InetSocketAddress(ADDRESS, PORT);
+		socket = new MulticastSocket(PORT);
 		senderSocket = new DatagramSocket();
 		Stream<NetworkInterface> nics = NetworkInterface.networkInterfaces();
 		Iterator<NetworkInterface> nicIter = nics.iterator();
@@ -91,8 +91,7 @@ public class PeripheralDiscoveryService {
 
 		tcpThread = new Thread(new Runnable() {
 			public void run() {
-				try {
-					ServerSocket ss = new ServerSocket(PORT);
+				try (ServerSocket ss = new ServerSocket(PORT)) {
 					while (!ss.isClosed()) {
 						Socket s = ss.accept();
 						// Deal with inter-peripheral tcp communications
@@ -105,6 +104,7 @@ public class PeripheralDiscoveryService {
 								}
 							}
 						});
+						clientThread.start();
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
