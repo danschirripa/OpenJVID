@@ -135,6 +135,7 @@ public class PeripheralDiscoveryService {
 			// Parse peripheral advertisement data
 			final PeripheralDescriptor desc = retrievePeripheralDescriptor(sourceAddress);
 			discoveredPeripherals.put(sourceAddress, desc);
+			System.out.println("Discovered " + sourceAddress.getCanonicalHostName());
 		}
 	}
 
@@ -164,9 +165,7 @@ public class PeripheralDiscoveryService {
 	}
 
 	private enum PeripheralServerCommands {
-		RETRIEVE_DESCRIPTOR {
-
-		}
+		RETRIEVE_DESCRIPTOR
 	}
 
 }
