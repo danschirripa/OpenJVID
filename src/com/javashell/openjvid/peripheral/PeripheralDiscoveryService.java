@@ -44,8 +44,12 @@ public class PeripheralDiscoveryService {
 		Iterator<NetworkInterface> nicIter = nics.iterator();
 		while (nicIter.hasNext()) {
 			final NetworkInterface nic = nicIter.next();
-			socket.joinGroup(sa, nic);
-			System.out.println("Joined " + nic.getDisplayName());
+			try {
+				socket.joinGroup(sa, nic);
+				System.out.println("Joined " + nic.getDisplayName());
+			} catch (Exception e) {
+				System.err.println("Failed to join on " + nic.getDisplayName());
+			}
 		}
 
 		advertisementData[0] = 'O';
