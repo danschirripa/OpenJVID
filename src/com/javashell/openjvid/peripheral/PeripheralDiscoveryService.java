@@ -3,26 +3,27 @@ package com.javashell.openjvid.peripheral;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketOptions;
 import java.net.StandardSocketOptions;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.javashell.openjvid.handlers.MainFrameActionHandler;
+import com.javashell.openjvid.ui.AddComponentDialog;
 
 public class PeripheralDiscoveryService {
 
@@ -34,6 +35,7 @@ public class PeripheralDiscoveryService {
 	private static Thread tcpThread;
 	private static Timer mCastAdvertisementTimer;
 	private static final byte[] advertisementData = new byte[16];
+	private static MainFrameActionHandler handler = null;
 
 	private static final Hashtable<InetAddress, PeripheralDescriptor> discoveredPeripherals = new Hashtable<InetAddress, PeripheralDescriptor>();
 
@@ -72,8 +74,11 @@ public class PeripheralDiscoveryService {
 		advertisementData[15] = advertisementData[0];
 
 		GsonBuilder builder = new GsonBuilder();
+		builder.setPrettyPrinting();
+		builder.serializeNulls();
 		Gson gson = builder.create();
-		PeripheralDescriptor localDescriptor = new PeripheralDescriptor(null, 0, 0);
+
+		PeripheralDescriptor localDescriptor = new PeripheralDescriptor(AddComponentDialog.callBackMethods);
 		localJsonDescriptor = gson.toJson(localDescriptor);
 
 		mCastThread = new Thread(new Runnable() {
@@ -123,7 +128,6 @@ public class PeripheralDiscoveryService {
 			@Override
 			public void run() {
 				try {
-					System.out.println("Advert");
 					socket.send(packet);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -136,12 +140,12 @@ public class PeripheralDiscoveryService {
 	}
 
 	private static void parsePacket(DatagramPacket packet) throws IOException {
-		System.out.println("RECEIVED " + packet.getAddress().getCanonicalHostName());
 		final InetAddress sourceAddress = packet.getAddress();
 		final byte[] data = packet.getData();
 		if (Arrays.equals(data, advertisementData) && !discoveredPeripherals.containsKey(sourceAddress)) {
 			// Parse peripheral advertisement data
 			final PeripheralDescriptor desc = retrievePeripheralDescriptor(sourceAddress);
+			desc.setInetAddress(sourceAddress);
 			discoveredPeripherals.put(sourceAddress, desc);
 			System.out.println("Discovered " + sourceAddress.getCanonicalHostName());
 		}
@@ -152,12 +156,16 @@ public class PeripheralDiscoveryService {
 
 		final GsonBuilder builder = new GsonBuilder();
 		final Gson gson = builder.create();
-		sock.getOutputStream().write(PeripheralServerCommands.RETRIEVE_DESCRIPTOR.name().getBytes());
+		sock.getOutputStream().write((PeripheralServerCommands.RETRIEVE_DESCRIPTOR.name() + "\n").getBytes());
 		PeripheralDescriptor desc = gson.fromJson(new InputStreamReader(sock.getInputStream()),
 				PeripheralDescriptor.class);
 
 		sock.close();
 
+		Map<String, String> env = desc.getHd();
+		for (String key : env.keySet()) {
+			System.out.println(key + ": " + env.get(key));
+		}
 		return desc;
 	}
 
@@ -167,13 +175,42 @@ public class PeripheralDiscoveryService {
 
 		if (command.equals(PeripheralServerCommands.RETRIEVE_DESCRIPTOR.name())) {
 			sock.getOutputStream().write(localJsonDescriptor.getBytes());
+		} else if (command.equals(PeripheralServerCommands.UPDATE_DESCRIPTOR.name())) {
+		} else if (command.equals(PeripheralServerCommands.NEGOTIATE_PERIPHERAL_CONNECTION.name())) {
+			System.out.println("Received peripheral negotiation");
+			int port = Integer.parseInt(sc.nextLine());
+			UUID sessionID = UUID.fromString(sc.nextLine());
+			System.out.println("Negotiation: " + port + " - " + sessionID.toString());
+			handler.addOpenJVIDPeripheral(discoveredPeripherals.get(sock.getInetAddress()), sessionID, port);
+			System.out.println("Negotiation complete");
 		}
 		sc.close();
 		sock.close();
 	}
 
+	public static void setMainFrameActionHandler(MainFrameActionHandler handler) {
+		PeripheralDiscoveryService.handler = handler;
+	}
+
+	public static Socket negotiatePeripheralCommunications(PeripheralDescriptor pd, ServerSocket serv, UUID sessionID) {
+		try (Socket sock = new Socket()) {
+			sock.connect(new InetSocketAddress(pd.getInetAddress(), PORT));
+			sock.getOutputStream().write((PeripheralServerCommands.NEGOTIATE_PERIPHERAL_CONNECTION.name() + "\n"
+					+ serv.getLocalPort() + "\n" + sessionID.toString() + "\n").getBytes());
+			sock.close();
+			return serv.accept();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static Hashtable<InetAddress, PeripheralDescriptor> getDiscoveredPeripherals() {
+		return discoveredPeripherals;
+	}
+
 	private enum PeripheralServerCommands {
-		RETRIEVE_DESCRIPTOR
+		RETRIEVE_DESCRIPTOR, UPDATE_DESCRIPTOR, NEGOTIATE_PERIPHERAL_CONNECTION
 	}
 
 }

@@ -24,10 +24,10 @@
 			<version>7.5.0</version>
 		</dependency>
 		<dependency>
-    <groupId>com.google.code.gson</groupId>
-    <artifactId>gson</artifactId>
-    <version>2.11.0</version>
-</dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.11.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.pushing-pixels</groupId>
 			<artifactId>radiance-component</artifactId>
@@ -42,6 +42,14 @@
 			<groupId>org.pushing-pixels</groupId>
 			<artifactId>radiance-theming-extras</artifactId>
 			<version>7.5.0</version>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.eclipse.swt/org.eclipse.swt.gtk.linux.x86_64 -->
+		<dependency>
+			<groupId>org.eclipse.swt</groupId>
+			<artifactId>org.eclipse.swt.gtk.linux.x86_64</artifactId>
+			<version>4.3</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>JNodeGraph</groupId>

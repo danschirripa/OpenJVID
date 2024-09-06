@@ -32,9 +32,12 @@ import com.javashell.openjvid.jnodecomponents.processors.IngestNodeFactory;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
+import com.javashell.openjvid.peripheral.PeripheralDescriptor;
 import com.javashell.openjvid.ui.components.DimensionInputComponent;
 import com.javashell.openjvid.ui.components.FileInputComponent;
+import com.javashell.openjvid.ui.components.FloatInputComponent;
 import com.javashell.openjvid.ui.components.IntegerInputComponent;
+import com.javashell.openjvid.ui.components.PeripheralInputComponent;
 import com.javashell.openjvid.ui.components.StringInputComponent;
 import com.javashell.openjvid.ui.components.URLInputComponent;
 
@@ -42,9 +45,10 @@ public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
 
 	public final static String[] componentTypes = { "NDI Ingest", "QOYV Ingest", "FFmpeg Ingest (URL)",
-			"FFmpeg Ingest (File)", "FFmpeg Ingest (Video Device)", "FFmpeg Ingest (String)", "Amcrest Ingest", "AutoFraming Digest", "Face Detector",
+			"FFmpeg Ingest (File)", "FFmpeg Ingest (Video Device)", "FFmpeg Ingest (String)", "Amcrest Ingest",
+			"AudioInjector", "AudioExtractor", "CombFilter", "Reverb", "Gain", "AutoFraming Digest", "Face Detector",
 			"FacePaint Digest", "Matrix Digest", "Multiview Digest", "NDI Egress", "QOYV Egress", "FFmpeg Egress",
-			"Preview Frame", "Scaling Digest" };
+			"Preview Frame", "Scaling Digest", "OpenJVID Peripheral" };
 
 	public final static HashMap<String, Method> callBackMethods;
 
@@ -125,7 +129,6 @@ public class AddComponentDialog extends JDialog {
 		pack();
 	}
 
-	//@SuppressWarnings("deprecation")
 	private JPanel generateInputPanel(Method m) {
 		JPanel inputPanel = new JPanel();
 		BoxLayout layout = new BoxLayout(inputPanel, BoxLayout.PAGE_AXIS);
@@ -211,15 +214,39 @@ public class AddComponentDialog extends JDialog {
 					}
 				};
 			}
-			
-			if(param.isInstance(new File(""))) {
+
+			if (param.isInstance(new File(""))) {
 				FileInputComponent inputComponent = new FileInputComponent(label);
 				inputPanel.add(inputComponent);
 				paramActions[index] = new AbstractAction() {
 					private static final long serialVersionUID = -2839715408638790225L;
 
 					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p,  inputComponent.getFile());
+						parameterValues.put(p, inputComponent.getFile());
+					}
+				};
+			}
+
+			if (param.isInstance(new PeripheralDescriptor())) {
+				PeripheralInputComponent inputComponent = new PeripheralInputComponent(label);
+				inputPanel.add(inputComponent);
+				paramActions[index] = new AbstractAction() {
+					private static final long serialVersionUID = -2839715408638790225L;
+
+					public void actionPerformed(ActionEvent e) {
+						parameterValues.put(p, inputComponent.getPeripheralDescriptor());
+					}
+				};
+			}
+
+			if (param.isAssignableFrom(float.class)) {
+				FloatInputComponent inputComponent = new FloatInputComponent(label);
+				inputPanel.add(inputComponent);
+				paramActions[index] = new AbstractAction() {
+					private static final long serialVersionUID = -2839715408638790225L;
+
+					public void actionPerformed(ActionEvent e) {
+						parameterValues.put(p, inputComponent.getFloat());
 					}
 				};
 			}

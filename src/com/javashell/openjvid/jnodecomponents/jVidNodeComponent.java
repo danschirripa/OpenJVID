@@ -1,24 +1,23 @@
 package com.javashell.openjvid.jnodecomponents;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
+import com.javashell.audio.AudioProcessor;
 import com.javashell.flow.FlowNode;
-import com.javashell.flow.VideoFlowNode;
 import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.video.ControlInterface;
-import com.javashell.video.VideoProcessor;
-import com.javashell.video.digestors.MatrixDigestor;
 
 public class jVidNodeComponent<T> extends JNodeComponent {
 	private final FlowNode<T> node;
-	private boolean hasControlInterface = false;
+	private boolean hasControlInterface = false, hasAudioProcessor = false;
 
 	public jVidNodeComponent(JNodeFlowPane flow, FlowNode<T> node) {
 		super(flow);
@@ -27,6 +26,11 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 			System.out.println("has control interface");
 			hasControlInterface = true;
 			addNodePoint(new jVidControlNodePoint(flow, this));
+		}
+		if (node.retrieveNodeContents() instanceof AudioProcessor) {
+			System.out.println("has audio processor");
+			hasAudioProcessor = true;
+			addNodePoint(new jVidAudioNodePoint(flow, this));
 		}
 
 	}
@@ -104,13 +108,15 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 		public jVidControlNodePoint(JNodeFlowPane flow, JNodeComponent parent) {
 			super(flow, parent);
+			setColor(Color.GRAY);
 		}
 
 		@Override
 		public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
 			if (origin instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
 				jVidNodeComponent<?>.jVidControlNodePoint comp = (jVidNodeComponent<?>.jVidControlNodePoint) origin;
-				Object nodeContents = ((jVidNodeComponent<?>)comp.getParentNodeComponent()).getNode().retrieveNodeContents();
+				Object nodeContents = ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+						.retrieveNodeContents();
 				if (nodeContents instanceof ControlInterface) {
 					ControlInterface controlOrigin = (ControlInterface) nodeContents;
 					controlOrigin.addSubscriber((ControlInterface) node.retrieveNodeContents());
@@ -122,20 +128,83 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
 			if (child instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
 				jVidNodeComponent<?>.jVidControlNodePoint comp = (jVidNodeComponent<?>.jVidControlNodePoint) child;
-				if (((jVidNodeComponent<?>)comp.getParentNodeComponent()).getNode().retrieveNodeContents() instanceof ControlInterface) {
+				if (((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+						.retrieveNodeContents() instanceof ControlInterface) {
 					ControlInterface thisInterface = (ControlInterface) node.retrieveNodeContents();
-					((ControlInterface) ((jVidNodeComponent<?>)comp.getParentNodeComponent()).getNode().retrieveNodeContents()).addSubscriber(thisInterface);
+					((ControlInterface) ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+							.retrieveNodeContents()).addSubscriber(thisInterface);
 				}
 			}
 		}
 
 		@Override
 		public void removeChildLinkage(JNodeComponent child) {
-			
+
 		}
 
 		@Override
 		public void removeOriginLinkage(JNodeComponent origin) {
+		}
+
+	}
+
+	private class jVidAudioNodePoint extends JNodeComponent.NodePoint {
+
+		public jVidAudioNodePoint(JNodeFlowPane flow, JNodeComponent parent) {
+			super(flow, parent);
+			setColor(Color.CYAN);
+		}
+
+		@Override
+		public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
+			if (origin instanceof jVidNodeComponent<?>.jVidAudioNodePoint) {
+				jVidNodeComponent<?>.jVidAudioNodePoint comp = (jVidNodeComponent<?>.jVidAudioNodePoint) origin;
+				Object nodeContents = ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+						.retrieveNodeContents();
+				if (nodeContents instanceof AudioProcessor) {
+					AudioProcessor audioOrigin = (AudioProcessor) nodeContents;
+					audioOrigin.addSubscriber((AudioProcessor) node.retrieveNodeContents());
+				}
+			}
+		}
+
+		@Override
+		public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
+			if (child instanceof jVidNodeComponent<?>.jVidAudioNodePoint) {
+				jVidNodeComponent<?>.jVidAudioNodePoint comp = (jVidNodeComponent<?>.jVidAudioNodePoint) child;
+				if (((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+						.retrieveNodeContents() instanceof AudioProcessor) {
+					AudioProcessor thisInterface = (AudioProcessor) node.retrieveNodeContents();
+					((AudioProcessor) ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+							.retrieveNodeContents()).addSubscriber(thisInterface);
+				}
+			}
+		}
+
+		@Override
+		public void removeChildLinkage(JNodeComponent child) {
+			if (child instanceof jVidNodeComponent<?>.jVidAudioNodePoint) {
+				jVidNodeComponent<?>.jVidAudioNodePoint comp = (jVidNodeComponent<?>.jVidAudioNodePoint) child;
+				if (((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+						.retrieveNodeContents() instanceof AudioProcessor) {
+					AudioProcessor thisInterface = (AudioProcessor) node.retrieveNodeContents();
+					((AudioProcessor) ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+							.retrieveNodeContents()).removeSubscriber(thisInterface);
+				}
+			}
+		}
+
+		@Override
+		public void removeOriginLinkage(JNodeComponent origin) {
+			if (origin instanceof jVidNodeComponent<?>.jVidAudioNodePoint) {
+				jVidNodeComponent<?>.jVidAudioNodePoint comp = (jVidNodeComponent<?>.jVidAudioNodePoint) origin;
+				Object nodeContents = ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+						.retrieveNodeContents();
+				if (nodeContents instanceof AudioProcessor) {
+					AudioProcessor audioOrigin = (AudioProcessor) nodeContents;
+					audioOrigin.removeSubscriber((AudioProcessor) node.retrieveNodeContents());
+				}
+			}
 		}
 
 	}
