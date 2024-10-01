@@ -219,7 +219,7 @@ public class DigestNodeFactory {
 
 		FlowNode<VideoProcessor> dspNode = new VideoFlowNode(dsp, null, null);
 		jVidNodeComponent<VideoProcessor> dspNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, dspNode);
-		dspNodeComp.setNodeName("Reverb");
+		dspNodeComp.setNodeName(delay + "ms Reverb");
 
 		dsp.open();
 
@@ -235,7 +235,7 @@ public class DigestNodeFactory {
 
 		FlowNode<VideoProcessor> dspNode = new VideoFlowNode(dsp, null, null);
 		jVidNodeComponent<VideoProcessor> dspNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, dspNode);
-		dspNodeComp.setNodeName("Reverb");
+		dspNodeComp.setNodeName("Gain");
 
 		dsp.open();
 

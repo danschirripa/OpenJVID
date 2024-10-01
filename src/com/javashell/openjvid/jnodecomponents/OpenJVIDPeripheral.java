@@ -88,7 +88,7 @@ public class OpenJVIDPeripheral implements VideoProcessor {
 			previousFrame = frame;
 			return frame;
 		} else {
-			System.out.println("FRAME");
+			//System.out.println("FRAME");
 			return receivedFrame;
 		}
 	}
