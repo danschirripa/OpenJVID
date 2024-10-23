@@ -6,6 +6,7 @@ import com.javashell.flow.FlowNode;
 import com.javashell.flow.VideoFlowNode;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.NodeType;
+import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
@@ -24,7 +25,11 @@ public class EgressNodeFactory {
 		jVidNodeComponent<VideoProcessor> prevNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, previewNode);
 		prevNodeComp.setNodeType(NodeType.Receiver);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"Preview Frame", resolution);
+
 		prevNodeComp.setNodeName("Preview Frame");
+		prevNodeComp.setNodeComponentDescriptor(desc);
 
 		prev.open();
 
@@ -39,7 +44,11 @@ public class EgressNodeFactory {
 		jVidNodeComponent<VideoProcessor> ndiNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ndiNode);
 		ndiNodeComp.setNodeType(NodeType.Receiver);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>("NDI Egress",
+				resolution, name);
+
 		ndiNodeComp.setNodeName(name);
+		ndiNodeComp.setNodeComponentDescriptor(desc);
 
 		ndi.open();
 
@@ -54,7 +63,11 @@ public class EgressNodeFactory {
 		jVidNodeComponent<VideoProcessor> qoyvNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, qoyvNode);
 		qoyvNodeComp.setNodeType(NodeType.Receiver);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"QOYV Egress", resolution, keyFrameInterval);
+
 		qoyvNodeComp.setNodeName("QOYV Egress");
+		qoyvNodeComp.setNodeComponentDescriptor(desc);
 
 		qoyv.open();
 

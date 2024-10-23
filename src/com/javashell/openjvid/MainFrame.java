@@ -1,5 +1,6 @@
 package com.javashell.openjvid;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JFrame;
@@ -9,6 +10,7 @@ import org.pushingpixels.radiance.theming.api.RadianceThemingCortex;
 import org.pushingpixels.radiance.theming.api.skin.GraphiteSiennaSkin;
 
 import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.openjvid.ui.AddComponentDialog;
 
@@ -39,11 +41,15 @@ public class MainFrame extends JFrame {
 		setName("OpenjVid");
 		setTitle("OpenjVid");
 
-		menuBar = new MainFrameMenuBar(handler);
+		menuBar = new MainFrameMenuBar(handler, flowPane);
 		setJMenuBar(menuBar);
 	}
 
 	public void createAndShowAddComponentDialog() {
 		new AddComponentDialog(this, flowPane);
+	}
+
+	public void loadConfiguration(File configuration) {
+		jVidConfigurationParser.loadConfiguration(flowPane, configuration);
 	}
 }

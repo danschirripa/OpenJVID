@@ -12,6 +12,7 @@ import com.javashell.flow.FlowNode;
 import com.javashell.flow.VideoFlowNode;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.NodeType;
+import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
@@ -33,7 +34,11 @@ public class IngestNodeFactory {
 		FlowController.registerFlowNode(ingressNode);
 		ingestNode.setNodeType(NodeType.Transmitter);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>("NDI Ingest",
+				ndiName, resolution);
+
 		ingestNode.setNodeName(ndiName);
+		ingestNode.setNodeComponentDescriptor(desc);
 
 		ingest.open();
 
@@ -53,7 +58,11 @@ public class IngestNodeFactory {
 		FlowController.registerFlowNode(amcNode);
 		amcNodeComp.setNodeType(NodeType.Transmitter);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"Amcrest Ingest", resolution, user, pass, ip, bitrate, camType);
+
 		amcNodeComp.setNodeName(camType + ": " + ip);
+		amcNodeComp.setNodeComponentDescriptor(desc);
 
 		amc.open();
 
@@ -64,7 +73,7 @@ public class IngestNodeFactory {
 	public static jVidNodeComponent<VideoProcessor> createQOYVStreamIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "IP") String ip,
 			@Label(label = "Port") int port, JNodeFlowPane flowPane) {
-		
+
 		var isMulticast = false;
 		QOYStreamIngestor qoyv = new QOYStreamIngestor(resolution, ip, port, isMulticast);
 		FlowNode<VideoProcessor> qoyvNode = new VideoFlowNode(qoyv, null, null);
@@ -72,7 +81,11 @@ public class IngestNodeFactory {
 		FlowController.registerFlowNode(qoyvNode);
 		qoyvNodeComp.setNodeType(NodeType.Transmitter);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"QOYV Ingest", resolution, ip, port);
+
 		qoyvNodeComp.setNodeName("QOYV: " + ip);
+		qoyvNodeComp.setNodeComponentDescriptor(desc);
 
 		qoyv.open();
 
@@ -89,6 +102,11 @@ public class IngestNodeFactory {
 		FlowController.registerFlowNode(ffmpegNode);
 		ffmpegNodeComp.setNodeType(NodeType.Transmitter);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"FFmpeg Ingest (URL)", resolution, videoInput);
+
+		ffmpegNodeComp.setNodeComponentDescriptor(desc);
+
 		ffmpeg.open();
 
 		return ffmpegNodeComp;
@@ -104,6 +122,12 @@ public class IngestNodeFactory {
 		FlowController.registerFlowNode(ffmpegNode);
 		ffmpegNodeComp.setNodeType(NodeType.Transmitter);
 
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"FFmpeg Ingest (File)", resolution, videoInput);
+
+		ffmpegNodeComp.setNodeName(videoInput.getName());
+		ffmpegNodeComp.setNodeComponentDescriptor(desc);
+
 		ffmpeg.open();
 
 		return ffmpegNodeComp;
@@ -116,12 +140,18 @@ public class IngestNodeFactory {
 		FFMPEGIngestor ffmpeg = new FFMPEGIngestor(resolution, videoInput);
 		ffmpeg.setFrameRate(frameRate);
 		ffmpeg.setOption("input_format", codec);
-		ffmpeg.setOption("video_size", resolution.width + "x"+resolution.height);
-		
+		ffmpeg.setOption("video_size", resolution.width + "x" + resolution.height);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"FFmpeg Ingest (Video Device)", resolution, videoInput, codec, frameRate);
+
 		FlowNode<VideoProcessor> ffmpegNode = new VideoFlowNode(ffmpeg, null, null);
 		jVidNodeComponent<VideoProcessor> ffmpegNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ffmpegNode);
 		FlowController.registerFlowNode(ffmpegNode);
+
+		ffmpegNodeComp.setNodeName(videoInput.getName());
 		ffmpegNodeComp.setNodeType(NodeType.Transmitter);
+		ffmpegNodeComp.setNodeComponentDescriptor(desc);
 
 		ffmpeg.open();
 
@@ -137,6 +167,9 @@ public class IngestNodeFactory {
 		jVidNodeComponent<VideoProcessor> ffmpegNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ffmpegNode);
 		FlowController.registerFlowNode(ffmpegNode);
 		ffmpegNodeComp.setNodeType(NodeType.Transmitter);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"FFmpeg Ingest (String)", resolution, videoInput);
 
 		ffmpeg.open();
 

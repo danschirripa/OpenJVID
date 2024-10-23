@@ -1,17 +1,33 @@
 package com.javashell.openjvid;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Scanner;
+
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
+import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 
 public class MainFrameMenuBar extends JMenuBar {
 	private MainFrameActionHandler handler;
+	private JMenu loadRecent = new JMenu("Recent");
+	private LinkedList<String> recentPaths = new LinkedList<String>();
+	private JNodeFlowPane flowPane;
 
-	public MainFrameMenuBar(MainFrameActionHandler handler) {
+	public MainFrameMenuBar(MainFrameActionHandler handler, JNodeFlowPane flowPane) {
 		this.handler = handler;
+		this.flowPane = flowPane;
 		createMenuBar();
+		loadRecents();
 	}
 
 	private void createMenuBar() {
@@ -22,7 +38,6 @@ public class MainFrameMenuBar extends JMenuBar {
 		// File Menu item setup
 		JMenuItem fileSave = new JMenuItem("Save");
 		JMenuItem fileLoad = new JMenuItem("Load");
-		JMenu loadRecent = new JMenu("Recent");
 		fileMenu.add(fileSave);
 		fileMenu.add(fileLoad);
 		fileMenu.add(loadRecent);
@@ -32,8 +47,6 @@ public class MainFrameMenuBar extends JMenuBar {
 
 		fileLoad.setActionCommand(MainFrameActionHandler.FILELOAD);
 		fileLoad.addActionListener(handler);
-
-		// TODO Add recent's menu
 
 		// Edit Menu item setup
 		JMenuItem editAddComponent = new JMenuItem("Add");
@@ -58,6 +71,33 @@ public class MainFrameMenuBar extends JMenuBar {
 		add(fileMenu);
 		add(editMenu);
 		add(toolsMenu);
+	}
+
+	private void loadRecents() {
+		File recentFile = new File(System.getProperty("user.home"), ".jvid");
+		try {
+			if (!recentFile.exists())
+				recentFile.createNewFile();
+			FileInputStream fin = new FileInputStream(recentFile);
+			Scanner sc = new Scanner(fin);
+			while (sc.hasNextLine()) {
+				final File file = new File(sc.nextLine());
+				if (file.exists()) {
+					recentPaths.add(file.getAbsolutePath());
+					final JMenuItem loadItem = new JMenuItem(file.getName());
+					loadItem.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							jVidConfigurationParser.loadConfiguration(flowPane, file);
+						}
+					});
+				}
+			}
+			sc.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

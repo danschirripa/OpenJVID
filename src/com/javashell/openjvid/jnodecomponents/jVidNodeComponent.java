@@ -12,12 +12,14 @@ import com.javashell.flow.FlowNode;
 import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
+import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.video.ControlInterface;
 
 public class jVidNodeComponent<T> extends JNodeComponent {
 	private final FlowNode<T> node;
 	private boolean hasControlInterface = false, hasAudioProcessor = false;
+	private jVidNodeComponentDescriptor<T> desc;
 
 	public jVidNodeComponent(JNodeFlowPane flow, FlowNode<T> node) {
 		super(flow);
@@ -32,6 +34,17 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 			hasAudioProcessor = true;
 			addNodePoint(new jVidAudioNodePoint(flow, this));
 		}
+	}
+
+	public void setNodeComponentDescriptor(jVidNodeComponentDescriptor<T> desc) {
+		this.desc = desc;
+	}
+
+	public jVidNodeComponentDescriptor<T> getNodeComponentDescriptor() {
+		return desc;
+	}
+
+	public void preSave() {
 
 	}
 

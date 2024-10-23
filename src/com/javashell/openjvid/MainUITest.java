@@ -1,6 +1,11 @@
 package com.javashell.openjvid;
 
+import java.io.File;
+
+import javax.swing.SwingUtilities;
+
 import com.javashell.flow.FlowController;
+import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
 
 public class MainUITest {
@@ -20,6 +25,16 @@ public class MainUITest {
 			}
 		});
 
+		File savedConfig = null;
+
+		if (args.length > 0) {
+			savedConfig = new File(args[0]);
+			if (!savedConfig.exists()) {
+				System.err.println("Specified configuration file innaccessible, " + savedConfig.getAbsolutePath());
+				savedConfig = null;
+			}
+		}
+
 		Runtime.getRuntime().addShutdownHook(hookThread);
 
 		MainFrame mf = new MainFrame();
@@ -27,6 +42,15 @@ public class MainUITest {
 		FlowController.startFlowControl();
 
 		PeripheralDiscoveryService.initializeService();
+
+		final File toLoad = savedConfig;
+
+		if (savedConfig != null)
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					mf.loadConfiguration(toLoad);
+				}
+			});
 
 		try {
 			while (mf.isVisible()) {

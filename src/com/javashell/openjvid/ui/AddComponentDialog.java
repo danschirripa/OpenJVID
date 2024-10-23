@@ -13,6 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -44,11 +45,14 @@ import com.javashell.openjvid.ui.components.URLInputComponent;
 public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
 
-	public final static String[] componentTypes = { "NDI Ingest", "QOYV Ingest", "FFmpeg Ingest (URL)",
-			"FFmpeg Ingest (File)", "FFmpeg Ingest (Video Device)", "FFmpeg Ingest (String)", "Amcrest Ingest",
-			"AudioInjector", "AudioExtractor", "CombFilter", "Reverb", "Gain", "AutoFraming Digest", "Face Detector",
-			"FacePaint Digest", "Matrix Digest", "Multiview Digest", "NDI Egress", "QOYV Egress", "FFmpeg Egress",
-			"Preview Frame", "Scaling Digest", "OpenJVID Peripheral" };
+	// "NDI Ingest", "QOYV Ingest", "FFmpeg Ingest (URL)",
+	// "FFmpeg Ingest (File)","FFmpeg Ingest (Video Device)","FFmpeg Ingest
+	// (String)","Amcrest
+	// Ingest","AudioInjector","AudioExtractor","CombFilter","Reverb","Gain","AutoFraming
+	// Digest","Face Detector","FacePaint Digest","Matrix Digest","Multiview
+	// Digest","NDI Egress","QOYV Egress","FFmpeg Egress","Preview Frame","Scaling
+	// Digest","OpenJVID Peripheral","OpenJVID Peripheral - Client"
+	public final static String[] componentTypes, shownComponentTypes;
 
 	public final static HashMap<String, Method> callBackMethods;
 
@@ -60,10 +64,21 @@ public class AddComponentDialog extends JDialog {
 		Method[] digestMethods = DigestNodeFactory.class.getMethods();
 		Method[] egressMethods = EgressNodeFactory.class.getMethods();
 
+		String[] _componentTypes = new String[ingestMethods.length + digestMethods.length + egressMethods.length];
+		String[] _shownComponentTypes = new String[_componentTypes.length];
+
+		int ctIndex = 0, sctIndex = 0;
+
 		for (Method m : ingestMethods) {
 			if (m.isAnnotationPresent(TypeNameAnnotation.TypeName.class)) {
 				TypeName type = m.getAnnotation(TypeNameAnnotation.TypeName.class);
 				callBackMethods.put(type.typeName(), m);
+				_componentTypes[ctIndex] = type.typeName();
+				ctIndex++;
+				if (type.isShown()) {
+					_shownComponentTypes[sctIndex] = type.typeName();
+					sctIndex++;
+				}
 				System.out.println("Found method " + type.typeName());
 			}
 		}
@@ -72,6 +87,12 @@ public class AddComponentDialog extends JDialog {
 			if (m.isAnnotationPresent(TypeNameAnnotation.TypeName.class)) {
 				TypeName type = m.getAnnotation(TypeNameAnnotation.TypeName.class);
 				callBackMethods.put(type.typeName(), m);
+				_componentTypes[ctIndex] = type.typeName();
+				ctIndex++;
+				if (type.isShown()) {
+					_shownComponentTypes[sctIndex] = type.typeName();
+					sctIndex++;
+				}
 				System.out.println("Found method " + type.typeName());
 			}
 		}
@@ -79,10 +100,18 @@ public class AddComponentDialog extends JDialog {
 		for (Method m : egressMethods) {
 			if (m.isAnnotationPresent(TypeNameAnnotation.TypeName.class)) {
 				TypeName type = m.getAnnotation(TypeNameAnnotation.TypeName.class);
+				_componentTypes[ctIndex] = type.typeName();
+				ctIndex++;
+				if (type.isShown()) {
+					_shownComponentTypes[sctIndex] = type.typeName();
+					sctIndex++;
+				}
 				callBackMethods.put(type.typeName(), m);
 			}
 		}
 
+		componentTypes = Arrays.copyOfRange(_componentTypes, 0, ctIndex);
+		shownComponentTypes = Arrays.copyOfRange(_shownComponentTypes, 0, sctIndex);
 	}
 
 	private static JPanel currentInputPanel;
@@ -93,10 +122,10 @@ public class AddComponentDialog extends JDialog {
 
 		this.pane = pane;
 
-		JComboBox<String> componentSelection = new JComboBox<String>(componentTypes);
+		JComboBox<String> componentSelection = new JComboBox<String>(shownComponentTypes);
 		// Component selection will drive jpanel generation via generateInputPanel based
 		// on the selected component type
-		currentInputPanel = generateInputPanel(callBackMethods.get(componentTypes[0]));
+		currentInputPanel = generateInputPanel(callBackMethods.get(shownComponentTypes[0]));
 		componentSelection.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {

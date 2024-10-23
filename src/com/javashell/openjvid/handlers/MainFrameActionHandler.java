@@ -5,13 +5,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.File;
 import java.util.UUID;
 
+import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 import com.javashell.flow.FlowController;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.MainFrame;
+import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.DigestNodeFactory;
 import com.javashell.openjvid.peripheral.PeripheralDescriptor;
@@ -54,13 +57,20 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 		case DELETE:
 			((jVidNodeComponent<VideoProcessor>) flowPane.getSelection()).getNode().retrieveNodeContents().close();
 			flowPane.remove(flowPane.getSelection());
-
 			break;
 		case EDITPROPS:
 			break;
 		case FILESAVE:
+			JFileChooser selectionDialog = new JFileChooser();
+			if (selectionDialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				jVidConfigurationParser.saveConfiguration(flowPane, selectionDialog.getSelectedFile());
+			}
 			break;
 		case FILELOAD:
+			selectionDialog = new JFileChooser();
+			if (selectionDialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				jVidConfigurationParser.loadConfiguration(flowPane, selectionDialog.getSelectedFile());
+			}
 			break;
 		}
 	}
