@@ -81,4 +81,16 @@ public class DigitalSignalDigestor implements VideoProcessor, AudioProcessor {
 		return null;
 	}
 
+	@Override
+	public void addSubscription(AudioProcessor origin, int localInputChannel, int originOutputChannel) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void removeSubscription(AudioProcessor origin, int localInputChannel, int originOutputChannel) {
+		// TODO Auto-generated method stub
+
+	}
+
 }

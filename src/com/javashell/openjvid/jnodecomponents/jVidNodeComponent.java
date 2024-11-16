@@ -184,30 +184,34 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 			return channel;
 		}
 
+		// Add origin linkage, "this" node is the child in this scenario
 		@Override
 		public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
 			if (origin instanceof jVidNodeComponent<?>.jVidAudioNodePoint) {
 				jVidNodeComponent<?>.jVidAudioNodePoint comp = (jVidNodeComponent<?>.jVidAudioNodePoint) origin;
+				AudioProcessor thisContents = (AudioProcessor) node.retrieveNodeContents();
 				Object nodeContents = ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
 						.retrieveNodeContents();
+
 				if (nodeContents instanceof AudioProcessor) {
 					AudioProcessor audioOrigin = (AudioProcessor) nodeContents;
-					audioOrigin.addSubscriber((AudioProcessor) node.retrieveNodeContents(), channel, comp.channel);
-					System.out.println("Add origin " + channel + " : " + comp.channel);
+					audioOrigin.addSubscriber(thisContents, channel, comp.channel);
+					thisContents.addSubscription(audioOrigin, channel, comp.channel);
 				}
 			}
 		}
 
+		// Add child linkage, "this" node is the origin in this scenario
 		@Override
 		public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
 			if (child instanceof jVidNodeComponent<?>.jVidAudioNodePoint) {
 				jVidNodeComponent<?>.jVidAudioNodePoint comp = (jVidNodeComponent<?>.jVidAudioNodePoint) child;
-				if (((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
-						.retrieveNodeContents() instanceof AudioProcessor) {
-					AudioProcessor thisInterface = (AudioProcessor) node.retrieveNodeContents();
-					((AudioProcessor) ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
-							.retrieveNodeContents()).addSubscriber(thisInterface, comp.channel, channel);
-					System.out.println("Add child " + comp.channel + " : " + channel);
+				Object childNode = ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+						.retrieveNodeContents();
+				if (childNode instanceof AudioProcessor) {
+					AudioProcessor audioOrigin = (AudioProcessor) node.retrieveNodeContents();
+					audioOrigin.addSubscriber((AudioProcessor) childNode, comp.channel, channel);
+					((AudioProcessor) childNode).addSubscription(audioOrigin, comp.channel, channel);
 				}
 			}
 		}
