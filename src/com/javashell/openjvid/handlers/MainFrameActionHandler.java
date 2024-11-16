@@ -32,7 +32,7 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 	public MainFrameActionHandler(JNodeFlowPane flowPane, MainFrame frame) {
 		this.flowPane = flowPane;
 		this.frame = frame;
-		PeripheralDiscoveryService.setMainFrameActionHandler(this);
+		PeripheralDiscoveryService.setMainFrameActionHandler(this, flowPane);
 	}
 
 	public void addOpenJVIDPeripheral(PeripheralDescriptor pd, UUID sessionID, int port) {

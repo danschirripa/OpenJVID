@@ -145,7 +145,7 @@ public class jVidConfigurationParser {
 		}
 	}
 
-	public static void saveConfiguration(JNodeFlowPane flowPane, File configuration) {
+	public static String dumpConfiguration(JNodeFlowPane flowPane) {
 		final Component[] components = flowPane.getComponents();
 		final Hashtable<JNodeComponent, HashSet<Linkage>> linkages = flowPane.getLinkages();
 		final Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>> matrices = new Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>>();
@@ -209,7 +209,11 @@ public class jVidConfigurationParser {
 				exportString.append("\n\t:");
 			}
 		}
+		return exportString.toString();
+	}
 
+	public static void saveConfiguration(JNodeFlowPane flowPane, File configuration) {
+		final String exportString = dumpConfiguration(flowPane);
 		try (FileOutputStream fout = new FileOutputStream(configuration)) {
 			fout.write(exportString.toString().getBytes());
 		} catch (IOException e) {

@@ -16,16 +16,18 @@ import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
+import com.javashell.openjvid.ui.components.JackInputComponent.JackInputClient;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.camera.Camera;
 import com.javashell.video.camera.extras.AmcrestCameraInterface;
+import com.javashell.video.digestors.AudioInjectorDigestor;
 import com.javashell.video.ingestors.FFMPEGIngestor;
 import com.javashell.video.ingestors.NDI5Ingestor;
 import com.javashell.video.ingestors.QOYStreamIngestor;
 
 public class IngestNodeFactory {
 
-	@TypeName(typeName = "NDI Ingest")
+	@TypeName(typeName = "NDI Ingest", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createNDI5Ingest(@Label(label = "NDI Name") String ndiName,
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		NDI5Ingestor ingest = new NDI5Ingestor(resolution, ndiName);
@@ -45,7 +47,7 @@ public class IngestNodeFactory {
 		return ingestNode;
 	}
 
-	@TypeName(typeName = "Amcrest Ingest")
+	@TypeName(typeName = "Amcrest Ingest", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createAmcrestIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "User") String user,
 			@Label(label = "Password") String pass, @Label(label = "IP") String ip,
@@ -69,7 +71,7 @@ public class IngestNodeFactory {
 		return amcNodeComp;
 	}
 
-	@TypeName(typeName = "QOYV Ingest")
+	@TypeName(typeName = "QOYV Ingest", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createQOYVStreamIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "IP") String ip,
 			@Label(label = "Port") int port, JNodeFlowPane flowPane) {
@@ -92,7 +94,7 @@ public class IngestNodeFactory {
 		return qoyvNodeComp;
 	}
 
-	@TypeName(typeName = "FFmpeg Ingest (URL)")
+	@TypeName(typeName = "FFmpeg Ingest (URL)", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "URL") URL videoInput,
 			JNodeFlowPane flowPane) {
@@ -112,7 +114,7 @@ public class IngestNodeFactory {
 		return ffmpegNodeComp;
 	}
 
-	@TypeName(typeName = "FFmpeg Ingest (File)")
+	@TypeName(typeName = "FFmpeg Ingest (File)", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "File Path") File videoInput,
 			JNodeFlowPane flowPane) {
@@ -133,7 +135,7 @@ public class IngestNodeFactory {
 		return ffmpegNodeComp;
 	}
 
-	@TypeName(typeName = "FFmpeg Ingest (Video Device)")
+	@TypeName(typeName = "FFmpeg Ingest (Video Device)", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "Device Path") File videoInput,
 			@Label(label = "Codec") String codec, @Label(label = "Framerate") int frameRate, JNodeFlowPane flowPane) {
@@ -158,7 +160,7 @@ public class IngestNodeFactory {
 		return ffmpegNodeComp;
 	}
 
-	@TypeName(typeName = "FFmpeg Ingest (String)")
+	@TypeName(typeName = "FFmpeg Ingest (String)", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "FFmpeg Input String") String videoInput,
 			JNodeFlowPane flowPane) {
@@ -174,6 +176,40 @@ public class IngestNodeFactory {
 		ffmpeg.open();
 
 		return ffmpegNodeComp;
+	}
+
+	@TypeName(typeName = "Jack Client", nodeType = NodeType.Transmitter)
+	public static jVidNodeComponent<VideoProcessor> createJackAudioClient(
+			@Label(label = "Source Name") JackInputClient sourceName, JNodeFlowPane flowPane) {
+
+		if (FlowController.jackManager.getRegisteredClients().containsKey(sourceName.clientName)) {
+
+			AudioInjectorDigestor ajd = new AudioInjectorDigestor("OpenJVID - " + sourceName.clientName,
+					FlowController.jackManager.getRegisteredClients().get(sourceName.clientName),
+					new Dimension(1920, 1080));
+
+			FlowNode<VideoProcessor> ajdNode = new VideoFlowNode(ajd, null, null);
+			jVidNodeComponent<VideoProcessor> ajdNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ajdNode);
+
+			jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+					"Jack Client", sourceName);
+
+			ajdNodeComp.setNodeType(NodeType.Transmitter);
+			ajdNodeComp.setNodeName(sourceName.clientName);
+			ajdNodeComp.setNodeComponentDescriptor(desc);
+
+			ajd.open();
+
+			try {
+				ajd.connectTo(sourceName.clientName);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return ajdNodeComp;
+		}
+
+		return null;
 	}
 
 }

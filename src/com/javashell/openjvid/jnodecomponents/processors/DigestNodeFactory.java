@@ -36,7 +36,7 @@ import com.javashell.video.digestors.ScalingDigestor;
 
 public class DigestNodeFactory {
 
-	@TypeName(typeName = "AutoFraming Digest")
+	@TypeName(typeName = "AutoFraming Digest", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createAutoFramingDigestor(
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		AutoFramingDigestor autoFraming = new AutoFramingDigestor(resolution);
@@ -56,7 +56,7 @@ public class DigestNodeFactory {
 		return autoFramingNodeComp;
 	}
 
-	@TypeName(typeName = "FacePaint Digest")
+	@TypeName(typeName = "FacePaint Digest", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createFaceSetPaintingDigestor(
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		FaceSetPaintingDigestor facePaint = new FaceSetPaintingDigestor(resolution);
@@ -76,7 +76,7 @@ public class DigestNodeFactory {
 		return facePaintNodeComp;
 	}
 
-	@TypeName(typeName = "Matrix Digest")
+	@TypeName(typeName = "Matrix Digest", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createMatrixDigestor(
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		MatrixDigestor matrix = new MatrixDigestor();
@@ -93,7 +93,7 @@ public class DigestNodeFactory {
 		return matrixNodeComp;
 	}
 
-	@TypeName(typeName = "Matrix Digest - Prepopulated", isShown = false)
+	@TypeName(typeName = "Matrix Digest - Prepopulated", isShown = false, nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createPopulatedMatrixDigestor(
 			@Label(label = "Resolution") Dimension resolution,
 			HashMap<jVidNodeComponent<VideoProcessor>, HashSet<jVidNodeComponent<VideoProcessor>>> crosspoints,
@@ -112,7 +112,7 @@ public class DigestNodeFactory {
 		return matrixNodeComp;
 	}
 
-	@TypeName(typeName = "Multiview Digest")
+	@TypeName(typeName = "Multiview Digest", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createMultiviewDigestor(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "Viewports") int viewports,
 			@Label(label = "Rows") int rows, @Label(label = "Columns") int cols, JNodeFlowPane flowPane) {
@@ -132,7 +132,7 @@ public class DigestNodeFactory {
 		return multiNodeComp;
 	}
 
-	@TypeName(typeName = "Scaling Digest")
+	@TypeName(typeName = "Scaling Digest", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createScalingDigestor(
 			@Label(label = "Input Resolution") Dimension resolution,
 			@Label(label = "Output Resolution") Dimension outputResolution, JNodeFlowPane flowPane) {
@@ -152,7 +152,7 @@ public class DigestNodeFactory {
 		return scalerNodeComp;
 	}
 
-	@TypeName(typeName = "Face Detector")
+	@TypeName(typeName = "Face Detector", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createFaceDetectorDigestor(
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		OpenCVDeepLearningFaceDetectorDigestor detector = new OpenCVDeepLearningFaceDetectorDigestor(resolution);
@@ -171,7 +171,7 @@ public class DigestNodeFactory {
 		return detectNodeComp;
 	}
 
-	@TypeName(typeName = "AudioInjector")
+	@TypeName(typeName = "AudioInjector", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createAudioInjector(@Label(label = "Jack Name") String name,
 			JNodeFlowPane flowPane) {
 		AudioInjectorDigestor ajd = new AudioInjectorDigestor(name, new String[] { "1" }, new Dimension(1920, 1080));
@@ -190,7 +190,7 @@ public class DigestNodeFactory {
 		return ajdNodeComp;
 	}
 
-	@TypeName(typeName = "AudioExtractor")
+	@TypeName(typeName = "AudioExtractor", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createAudioExtractor(@Label(label = "Jack Name") String name,
 			JNodeFlowPane flowPane) {
 		AudioExtractorDigestor ajd = new AudioExtractorDigestor(name, new String[] { "1" }, new Dimension(1920, 1080));
@@ -200,15 +200,16 @@ public class DigestNodeFactory {
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
 				"AudioExtractor", name);
 
-		ajdNodeComp.setNodeType(NodeType.Transceiver);
+		ajdNodeComp.setNodeType(NodeType.Receiver);
 		ajdNodeComp.setNodeName("Audio Out: " + name);
+		ajdNodeComp.setNodeComponentDescriptor(desc);
 
 		ajd.open();
 
 		return ajdNodeComp;
 	}
 
-	@TypeName(typeName = "CombFilter")
+	@TypeName(typeName = "CombFilter", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createCombFilterComponent(@Label(label = "Delay") float delay,
 			@Label(label = "Decay Factor") float decayFactor, JNodeFlowPane flowPane) {
 		CombFilter cf = new CombFilter(CombFilterType.FEED_FORWARD);
@@ -223,7 +224,7 @@ public class DigestNodeFactory {
 		return dspNodeComp;
 	}
 
-	@TypeName(typeName = "Reverb")
+	@TypeName(typeName = "Reverb", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createReverbComponent(@Label(label = "Delay") float delay,
 			@Label(label = "Decay Factor") float decayFactor, JNodeFlowPane flowPane) {
 		BasicReverb cf = new BasicReverb(2);
@@ -238,7 +239,7 @@ public class DigestNodeFactory {
 		return dspNodeComp;
 	}
 
-	@TypeName(typeName = "Gain")
+	@TypeName(typeName = "Gain", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createGainComponent(@Label(label = "Percentage") float perc,
 			JNodeFlowPane flowPane) {
 		GainFilter cf = new GainFilter();
@@ -254,7 +255,7 @@ public class DigestNodeFactory {
 		return dspNodeComp;
 	}
 
-	@TypeName(typeName = "OpenJVID Peripheral")
+	@TypeName(typeName = "OpenJVID Peripheral", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createOpenJVIDPeripheral(
 			@Label(label = "Peripheral") PeripheralDescriptor pd, JNodeFlowPane flowPane) {
 		try {
@@ -279,7 +280,7 @@ public class DigestNodeFactory {
 		return null;
 	}
 
-	@TypeName(typeName = "OpenJVID Peripheral - Client", isShown = false)
+	@TypeName(typeName = "OpenJVID Peripheral - Client", isShown = false, nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createOpenJVIDPeripheral(PeripheralDescriptor pd, UUID sessionID,
 			int port, JNodeFlowPane flowPane) {
 		try {

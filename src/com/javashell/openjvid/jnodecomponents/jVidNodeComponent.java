@@ -11,6 +11,7 @@ import com.javashell.audio.AudioProcessor;
 import com.javashell.flow.FlowNode;
 import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.jnodegraph.NodeType;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
@@ -32,7 +33,9 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		if (node.retrieveNodeContents() instanceof AudioProcessor) {
 			System.out.println("has audio processor");
 			hasAudioProcessor = true;
-			addNodePoint(new jVidAudioNodePoint(flow, this));
+			AudioProcessor audioProc = (AudioProcessor) node.retrieveNodeContents();
+			for (int i = 0; i < audioProc.getAudioChannels(); i++)
+				addNodePoint(new jVidAudioNodePoint(flow, this, i + 1));
 		}
 	}
 
@@ -162,10 +165,23 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 	}
 
 	private class jVidAudioNodePoint extends JNodeComponent.NodePoint {
+		private int channel = 1;
+		private JNodeComponent parent;
 
-		public jVidAudioNodePoint(JNodeFlowPane flow, JNodeComponent parent) {
+		public jVidAudioNodePoint(JNodeFlowPane flow, JNodeComponent parent, int channel) {
 			super(flow, parent);
 			setColor(Color.CYAN);
+			this.channel = channel;
+			this.parent = parent;
+		}
+
+		@Override
+		public NodeType getNodeType() {
+			return parent.getNodeType();
+		}
+
+		public int getChannel() {
+			return channel;
 		}
 
 		@Override
@@ -176,7 +192,8 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 						.retrieveNodeContents();
 				if (nodeContents instanceof AudioProcessor) {
 					AudioProcessor audioOrigin = (AudioProcessor) nodeContents;
-					audioOrigin.addSubscriber((AudioProcessor) node.retrieveNodeContents());
+					audioOrigin.addSubscriber((AudioProcessor) node.retrieveNodeContents(), channel, comp.channel);
+					System.out.println("Add origin " + channel + " : " + comp.channel);
 				}
 			}
 		}
@@ -189,7 +206,8 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 						.retrieveNodeContents() instanceof AudioProcessor) {
 					AudioProcessor thisInterface = (AudioProcessor) node.retrieveNodeContents();
 					((AudioProcessor) ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
-							.retrieveNodeContents()).addSubscriber(thisInterface);
+							.retrieveNodeContents()).addSubscriber(thisInterface, comp.channel, channel);
+					System.out.println("Add child " + comp.channel + " : " + channel);
 				}
 			}
 		}
@@ -202,7 +220,7 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 						.retrieveNodeContents() instanceof AudioProcessor) {
 					AudioProcessor thisInterface = (AudioProcessor) node.retrieveNodeContents();
 					((AudioProcessor) ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
-							.retrieveNodeContents()).removeSubscriber(thisInterface);
+							.retrieveNodeContents()).removeSubscriber(thisInterface, channel, comp.channel);
 				}
 			}
 		}
@@ -215,7 +233,8 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 						.retrieveNodeContents();
 				if (nodeContents instanceof AudioProcessor) {
 					AudioProcessor audioOrigin = (AudioProcessor) nodeContents;
-					audioOrigin.removeSubscriber((AudioProcessor) node.retrieveNodeContents());
+					audioOrigin.removeSubscriber((AudioProcessor) node.retrieveNodeContents(), comp.channel,
+							this.channel);
 				}
 			}
 		}

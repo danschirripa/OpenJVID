@@ -16,6 +16,9 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -27,6 +30,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
+import com.javashell.openjvid.jnodecomponents.EmulatedComponent;
+import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.DigestNodeFactory;
 import com.javashell.openjvid.jnodecomponents.processors.EgressNodeFactory;
 import com.javashell.openjvid.jnodecomponents.processors.IngestNodeFactory;
@@ -38,20 +44,15 @@ import com.javashell.openjvid.ui.components.DimensionInputComponent;
 import com.javashell.openjvid.ui.components.FileInputComponent;
 import com.javashell.openjvid.ui.components.FloatInputComponent;
 import com.javashell.openjvid.ui.components.IntegerInputComponent;
+import com.javashell.openjvid.ui.components.JackInputComponent;
 import com.javashell.openjvid.ui.components.PeripheralInputComponent;
 import com.javashell.openjvid.ui.components.StringInputComponent;
 import com.javashell.openjvid.ui.components.URLInputComponent;
+import com.javashell.video.VideoProcessor;
 
 public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
 
-	// "NDI Ingest", "QOYV Ingest", "FFmpeg Ingest (URL)",
-	// "FFmpeg Ingest (File)","FFmpeg Ingest (Video Device)","FFmpeg Ingest
-	// (String)","Amcrest
-	// Ingest","AudioInjector","AudioExtractor","CombFilter","Reverb","Gain","AutoFraming
-	// Digest","Face Detector","FacePaint Digest","Matrix Digest","Multiview
-	// Digest","NDI Egress","QOYV Egress","FFmpeg Egress","Preview Frame","Scaling
-	// Digest","OpenJVID Peripheral","OpenJVID Peripheral - Client"
 	public final static String[] componentTypes, shownComponentTypes;
 
 	public final static HashMap<String, Method> callBackMethods;
@@ -116,10 +117,11 @@ public class AddComponentDialog extends JDialog {
 
 	private static JPanel currentInputPanel;
 	private final JNodeFlowPane pane;
+	private final boolean isEmulated;
 
-	public AddComponentDialog(Frame owner, JNodeFlowPane pane) {
+	public AddComponentDialog(Frame owner, JNodeFlowPane pane, boolean isEmulated) {
 		super(owner, "Add Component", true);
-
+		this.isEmulated = isEmulated;
 		this.pane = pane;
 
 		JComboBox<String> componentSelection = new JComboBox<String>(shownComponentTypes);
@@ -279,6 +281,18 @@ public class AddComponentDialog extends JDialog {
 					}
 				};
 			}
+
+			if (param.isInstance(new JackInputComponent.JackInputClient(""))) {
+				JackInputComponent inputComponent = new JackInputComponent(label);
+				inputPanel.add(inputComponent);
+				paramActions[index] = new AbstractAction() {
+					private static final long serialVersionUID = -2839715408638790225L;
+
+					public void actionPerformed(ActionEvent e) {
+						parameterValues.put(p, inputComponent.getString());
+					}
+				};
+			}
 			index++;
 		}
 
@@ -291,19 +305,42 @@ public class AddComponentDialog extends JDialog {
 					a.actionPerformed(e);
 				}
 
-				Object[] paramValues = new Object[params.length];
-				for (int i = 0; i < params.length; i++) {
+				int paramsSize = (isEmulated ? params.length - 1 : params.length);
+				Object[] paramValues = new Object[paramsSize];
+				for (int i = 0; i < paramsSize; i++) {
 					paramValues[i] = parameterValues.get(params[i]);
 				}
 
-				paramValues[params.length - 1] = pane;
-
-				for (int i = 0; i < paramValues.length; i++)
-					System.out.println(i + " " + paramValues[i]);
-
 				try {
-					Component vidComp = (Component) m.invoke(null, paramValues);
-					pane.add(vidComp);
+					if (isEmulated) {
+						for (int i = 0; i < paramValues.length; i++)
+							System.out.println(i + " " + paramValues[i]);
+						jVidNodeComponent<VideoProcessor> emuComp = new EmulatedComponent(pane);
+						String compKey = null;
+						for (String key : callBackMethods.keySet()) {
+							if (m == callBackMethods.get(key)) {
+								compKey = key;
+								break;
+							}
+						}
+
+						jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+								compKey, paramValues);
+
+						if (m.isAnnotationPresent(TypeNameAnnotation.TypeName.class)) {
+							TypeName type = m.getAnnotation(TypeNameAnnotation.TypeName.class);
+							emuComp.setNodeType(type.nodeType());
+						}
+						emuComp.setNodeComponentDescriptor(desc);
+						pane.add(emuComp);
+					} else {
+						paramValues[params.length - 1] = pane;
+
+						for (int i = 0; i < paramValues.length; i++)
+							System.out.println(i + " " + paramValues[i]);
+						Component vidComp = (Component) m.invoke(null, paramValues);
+						pane.add(vidComp);
+					}
 				} catch (IllegalAccessException e1) {
 					e1.printStackTrace();
 				} catch (InvocationTargetException e1) {

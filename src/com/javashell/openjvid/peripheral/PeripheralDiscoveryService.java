@@ -1,5 +1,7 @@
 package com.javashell.openjvid.peripheral;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
@@ -22,6 +24,8 @@ import java.util.stream.Stream;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.openjvid.ui.AddComponentDialog;
 
@@ -36,6 +40,7 @@ public class PeripheralDiscoveryService {
 	private static Timer mCastAdvertisementTimer;
 	private static final byte[] advertisementData = new byte[16];
 	private static MainFrameActionHandler handler = null;
+	private static JNodeFlowPane flowPane = null;
 
 	private static final Hashtable<InetAddress, PeripheralDescriptor> discoveredPeripherals = new Hashtable<InetAddress, PeripheralDescriptor>();
 
@@ -183,13 +188,27 @@ public class PeripheralDiscoveryService {
 			System.out.println("Negotiation: " + port + " - " + sessionID.toString());
 			handler.addOpenJVIDPeripheral(discoveredPeripherals.get(sock.getInetAddress()), sessionID, port);
 			System.out.println("Negotiation complete");
+		} else if (command.equals(PeripheralServerCommands.UPLOAD_CONFIGURATION.name())) {
+			File tmpConfigFile = File.createTempFile("jvid", "tmp");
+			try (FileOutputStream fout = new FileOutputStream(tmpConfigFile)) {
+				while (sock.getInputStream().available() > 0) {
+					fout.write(sock.getInputStream().read());
+				}
+				jVidConfigurationParser.loadConfiguration(flowPane, tmpConfigFile);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else if (command.equals(PeripheralServerCommands.DOWNLOAD_CONFIGURATION.name())) {
+			final String configurationString = jVidConfigurationParser.dumpConfiguration(flowPane);
+			sock.getOutputStream().write(configurationString.getBytes());
 		}
 		sc.close();
 		sock.close();
 	}
 
-	public static void setMainFrameActionHandler(MainFrameActionHandler handler) {
+	public static void setMainFrameActionHandler(MainFrameActionHandler handler, JNodeFlowPane flowPane) {
 		PeripheralDiscoveryService.handler = handler;
+		PeripheralDiscoveryService.flowPane = flowPane;
 	}
 
 	public static Socket negotiatePeripheralCommunications(PeripheralDescriptor pd, ServerSocket serv, UUID sessionID) {
@@ -210,7 +229,8 @@ public class PeripheralDiscoveryService {
 	}
 
 	private enum PeripheralServerCommands {
-		RETRIEVE_DESCRIPTOR, UPDATE_DESCRIPTOR, NEGOTIATE_PERIPHERAL_CONNECTION
+		RETRIEVE_DESCRIPTOR, UPDATE_DESCRIPTOR, NEGOTIATE_PERIPHERAL_CONNECTION, UPLOAD_CONFIGURATION,
+		DOWNLOAD_CONFIGURATION
 	}
 
 }

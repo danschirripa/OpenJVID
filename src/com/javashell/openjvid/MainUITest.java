@@ -12,7 +12,7 @@ public class MainUITest {
 	public static void main(String[] args) throws Exception {
 		Thread hookThread = new Thread(new Runnable() {
 			public void run() {
-				System.err.println("SHUTDOWN");
+				System.err.println("SHUTDOWN, DUMPING STACK TRACE FOR DEBUG");
 				var traces = Thread.getAllStackTraces();
 				for (var key : traces.keySet()) {
 					System.err.println(key.getName());
@@ -37,7 +37,7 @@ public class MainUITest {
 
 		Runtime.getRuntime().addShutdownHook(hookThread);
 
-		MainFrame mf = new MainFrame();
+		MainFrame mf = new MainFrame(false);
 
 		FlowController.startFlowControl();
 

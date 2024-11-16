@@ -35,14 +35,14 @@ public class DigitalSignalDigestor implements VideoProcessor, AudioProcessor {
 	}
 
 	@Override
-	public void processSamples(FloatBuffer[] samples) {
+	public void processSamples(AudioProcessor p, FloatBuffer[] samples) {
 		if (samples == null)
 			return;
 		for (int i = 0; i < samples.length; i++)
 			samples[i] = dsp.processSamples(samples[i], delay, decayFactor, audioClient.getSampleRate());
 
 		for (AudioProcessor ap : audioProcessors) {
-			ap.processSamples(samples);
+			ap.processSamples(this, samples);
 		}
 	}
 
@@ -52,12 +52,12 @@ public class DigitalSignalDigestor implements VideoProcessor, AudioProcessor {
 	}
 
 	@Override
-	public void addSubscriber(AudioProcessor p) {
+	public void addSubscriber(AudioProcessor p, int localInputChannel, int originOutputChannel) {
 		audioProcessors.add(p);
 	}
 
 	@Override
-	public void removeSubscriber(AudioProcessor p) {
+	public void removeSubscriber(AudioProcessor p, int localInputChannel, int originOutputChannel) {
 		audioProcessors.remove(p);
 	}
 

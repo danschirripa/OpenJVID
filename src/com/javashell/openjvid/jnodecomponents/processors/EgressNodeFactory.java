@@ -17,7 +17,7 @@ import com.javashell.video.egressors.QOYStreamEgressor;
 
 public class EgressNodeFactory {
 
-	@TypeName(typeName = "Preview Frame")
+	@TypeName(typeName = "Preview Frame", nodeType = NodeType.Receiver)
 	public static jVidNodeComponent<VideoProcessor> createPreviewFrameEgress(
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		LocalWindowEgressor prev = new LocalWindowEgressor(resolution);
@@ -36,7 +36,7 @@ public class EgressNodeFactory {
 		return prevNodeComp;
 	}
 
-	@TypeName(typeName = "NDI Egress")
+	@TypeName(typeName = "NDI Egress", nodeType = NodeType.Receiver)
 	public static jVidNodeComponent<VideoProcessor> createNDIEgress(@Label(label = "Resolution") Dimension resolution,
 			@Label(label = "NDI Name") String name, JNodeFlowPane flowPane) {
 		NDI5Egressor ndi = new NDI5Egressor(resolution, name);
@@ -55,7 +55,7 @@ public class EgressNodeFactory {
 		return ndiNodeComp;
 	}
 
-	@TypeName(typeName = "QOYV Egress")
+	@TypeName(typeName = "QOYV Egress", nodeType = NodeType.Receiver)
 	public static jVidNodeComponent<VideoProcessor> createQOYVEgress(@Label(label = "Resolution") Dimension resolution,
 			@Label(label = "Key Frame Interval") int keyFrameInterval, JNodeFlowPane flowPane) {
 		QOYStreamEgressor qoyv = new QOYStreamEgressor(resolution, keyFrameInterval);

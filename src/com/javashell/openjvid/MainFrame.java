@@ -19,15 +19,17 @@ public class MainFrame extends JFrame {
 	private JNodeFlowPane flowPane;
 	private MainFrameMenuBar menuBar;
 	private MainFrameActionHandler handler;
+	private final boolean isEmulated;
 
-	public MainFrame() throws InvocationTargetException, InterruptedException {
-
+	public MainFrame(boolean isEmulated) throws InvocationTargetException, InterruptedException {
+		this.isEmulated = isEmulated;
 		SwingUtilities.invokeAndWait(new Runnable() {
 			public void run() {
 				RadianceThemingCortex.GlobalScope.setSkin(new GraphiteSiennaSkin());
 				createFrame();
 				setSize(500, 500);
 				setVisible(true);
+				setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			}
 		});
 
@@ -46,7 +48,7 @@ public class MainFrame extends JFrame {
 	}
 
 	public void createAndShowAddComponentDialog() {
-		new AddComponentDialog(this, flowPane);
+		new AddComponentDialog(this, flowPane, isEmulated);
 	}
 
 	public void loadConfiguration(File configuration) {
