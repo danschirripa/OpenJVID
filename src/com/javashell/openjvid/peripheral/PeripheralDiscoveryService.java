@@ -1,8 +1,11 @@
 package com.javashell.openjvid.peripheral;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -12,6 +15,7 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.StandardSocketOptions;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -21,6 +25,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.stream.Stream;
+
+import javax.swing.SwingUtilities;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -175,26 +181,42 @@ public class PeripheralDiscoveryService {
 	}
 
 	private static void handleClient(Socket sock) throws IOException {
-		Scanner sc = new Scanner(sock.getInputStream());
-		String command = sc.nextLine();
+		final BufferedInputStream bin = new BufferedInputStream(sock.getInputStream());
+		String command = readUntil((byte) '\n', bin);
 
 		if (command.equals(PeripheralServerCommands.RETRIEVE_DESCRIPTOR.name())) {
 			sock.getOutputStream().write(localJsonDescriptor.getBytes());
 		} else if (command.equals(PeripheralServerCommands.UPDATE_DESCRIPTOR.name())) {
 		} else if (command.equals(PeripheralServerCommands.NEGOTIATE_PERIPHERAL_CONNECTION.name())) {
 			System.out.println("Received peripheral negotiation");
-			int port = Integer.parseInt(sc.nextLine());
-			UUID sessionID = UUID.fromString(sc.nextLine());
+			int port = Integer.parseInt(readUntil((byte) '\n', bin));
+			UUID sessionID = UUID.fromString(readUntil((byte) '\n', bin));
 			System.out.println("Negotiation: " + port + " - " + sessionID.toString());
 			handler.addOpenJVIDPeripheral(discoveredPeripherals.get(sock.getInetAddress()), sessionID, port);
 			System.out.println("Negotiation complete");
 		} else if (command.equals(PeripheralServerCommands.UPLOAD_CONFIGURATION.name())) {
+			System.out.println("Receiving configuration from " + sock.getInetAddress().getCanonicalHostName());
 			File tmpConfigFile = File.createTempFile("jvid", "tmp");
+
+			final byte[] lengthBytes = bin.readNBytes(4);
+			final int length = ByteBuffer.wrap(lengthBytes).getInt();
 			try (FileOutputStream fout = new FileOutputStream(tmpConfigFile)) {
-				while (sock.getInputStream().available() > 0) {
-					fout.write(sock.getInputStream().read());
+				System.out.println("Reading " + length);
+				int finalLength = 0;
+				for (int i = 0; i < length; i++) {
+					fout.write(bin.read());
+					finalLength = i;
 				}
-				jVidConfigurationParser.loadConfiguration(flowPane, tmpConfigFile);
+				System.out.println("Read " + finalLength);
+				fout.flush();
+				fout.close();
+				System.out.println("Configuration received: " + tmpConfigFile.getAbsolutePath());
+				SwingUtilities.invokeAndWait(new Runnable() {
+					public void run() {
+						jVidConfigurationParser.loadConfiguration(flowPane, tmpConfigFile);
+					}
+				});
+				System.out.println("Configuration loaded");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -202,7 +224,7 @@ public class PeripheralDiscoveryService {
 			final String configurationString = jVidConfigurationParser.dumpConfiguration(flowPane);
 			sock.getOutputStream().write(configurationString.getBytes());
 		}
-		sc.close();
+		bin.close();
 		sock.close();
 	}
 
@@ -224,6 +246,28 @@ public class PeripheralDiscoveryService {
 		}
 	}
 
+	public static void uploadConfiguration(File configuration, PeripheralDescriptor desc) {
+		System.out.println("Sending configuration file " + configuration.getName() + " to "
+				+ desc.getInetAddress().getCanonicalHostName());
+		try (Socket sock = new Socket()) {
+			final FileInputStream fin = new FileInputStream(configuration);
+			final byte[] confBytes = fin.readAllBytes();
+			sock.connect(new InetSocketAddress(desc.getInetAddress(), PORT));
+			System.out.println("Connection successful");
+			sock.getOutputStream().write((PeripheralServerCommands.UPLOAD_CONFIGURATION.name() + "\n").getBytes());
+			sock.getOutputStream().write(ByteBuffer.allocate(4).putInt(confBytes.length).array());
+			System.out.println("Wrote UPLOAD\\n " + confBytes.length);
+			for (int i = 0; i < confBytes.length; i++) {
+				sock.getOutputStream().write(confBytes[i]);
+			}
+			System.out.println("Wrote conf");
+			fin.close();
+			sock.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static Hashtable<InetAddress, PeripheralDescriptor> getDiscoveredPeripherals() {
 		return discoveredPeripherals;
 	}
@@ -231,6 +275,15 @@ public class PeripheralDiscoveryService {
 	private enum PeripheralServerCommands {
 		RETRIEVE_DESCRIPTOR, UPDATE_DESCRIPTOR, NEGOTIATE_PERIPHERAL_CONNECTION, UPLOAD_CONFIGURATION,
 		DOWNLOAD_CONFIGURATION
+	}
+
+	private static String readUntil(byte delimiter, InputStream in) throws IOException {
+		String s = "";
+		byte[] next = new byte[1];
+		while ((next[0] = (byte) in.read()) != delimiter) {
+			s = s + new String(next);
+		}
+		return s;
 	}
 
 }

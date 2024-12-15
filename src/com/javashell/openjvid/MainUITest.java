@@ -4,8 +4,12 @@ import java.io.File;
 
 import javax.swing.SwingUtilities;
 
+import com.hk.lua.LuaLibrary;
 import com.javashell.flow.FlowController;
-import com.javashell.openjvid.configuration.jVidConfigurationParser;
+import com.javashell.openjvid.lua.JavashellSwingLuaLibrary;
+import com.javashell.openjvid.lua.JavashellLuaLibrary;
+import com.javashell.openjvid.lua.LuaManager;
+import com.javashell.openjvid.lua.exceptions.LuaLibraryLoadException;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
 
 public class MainUITest {
@@ -22,10 +26,21 @@ public class MainUITest {
 					}
 					System.err.println("---------------------------------");
 				}
+				System.err.println("STACKDUMP");
 			}
 		});
 
 		File savedConfig = null;
+
+		try {
+			LuaManager.registerHook("Socket", JavashellLuaLibrary.SOCKET);
+			LuaManager.registerHook("Timer", JavashellLuaLibrary.TIMER);
+			LuaManager.registerHook("Package", LuaLibrary.PACKAGE);
+			LuaManager.registerHook("Generic", JavashellLuaLibrary.JSH);
+			LuaManager.registerHook("Desktop", JavashellSwingLuaLibrary.DESKTOP);
+		} catch (LuaLibraryLoadException e) {
+			e.printStackTrace();
+		}
 
 		if (args.length > 0) {
 			savedConfig = new File(args[0]);

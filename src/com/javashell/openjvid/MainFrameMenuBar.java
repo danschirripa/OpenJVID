@@ -66,6 +66,16 @@ public class MainFrameMenuBar extends JMenuBar {
 		editSelectedProperties.addActionListener(handler);
 
 		// Tools Menu item setup
+		JMenuItem toolUpload = new JMenuItem("Upload");
+		JMenuItem toolDownload = new JMenuItem("Download");
+		toolsMenu.add(toolUpload);
+		toolsMenu.add(toolDownload);
+
+		toolUpload.setActionCommand(MainFrameActionHandler.UPLOAD);
+		toolUpload.addActionListener(handler);
+		
+		toolDownload.setActionCommand(MainFrameActionHandler.DOWNLOAD);
+		toolDownload.addActionListener(handler);
 
 		// Menu aggregation
 		add(fileMenu);

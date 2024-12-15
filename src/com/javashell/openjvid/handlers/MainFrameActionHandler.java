@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.io.File;
 import java.util.UUID;
 
 import javax.swing.JFileChooser;
@@ -19,12 +18,13 @@ import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.DigestNodeFactory;
 import com.javashell.openjvid.peripheral.PeripheralDescriptor;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
+import com.javashell.openjvid.ui.UploadConfigurationDialog;
 import com.javashell.video.VideoProcessor;
 
 public class MainFrameActionHandler implements MouseListener, MouseMotionListener, ActionListener {
 
 	public static final String ADD = "ADD", DELETE = "DELETE", EDITPROPS = "EDIT_PROPS", FILESAVE = "FILE_SAVE,",
-			FILELOAD = "FILE_LOAD";
+			FILELOAD = "FILE_LOAD", UPLOAD = "UPLOAD", DOWNLOAD = "DOWNLOAD";
 
 	private final JNodeFlowPane flowPane;
 	private final MainFrame frame;
@@ -72,6 +72,9 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 				jVidConfigurationParser.loadConfiguration(flowPane, selectionDialog.getSelectedFile());
 			}
 			break;
+		case UPLOAD:
+			UploadConfigurationDialog dia = new UploadConfigurationDialog();
+			dia.setVisible(true);
 		}
 	}
 
