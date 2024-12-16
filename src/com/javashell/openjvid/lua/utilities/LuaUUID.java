@@ -1,4 +1,4 @@
-package com.javashell.openjvid.lua;
+package com.javashell.openjvid.lua.utilities;
 
 import java.util.UUID;
 

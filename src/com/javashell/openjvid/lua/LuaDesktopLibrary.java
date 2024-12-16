@@ -21,6 +21,7 @@ import javax.swing.border.EtchedBorder;
 import com.hk.lua.Environment;
 import com.hk.lua.Lua;
 import com.hk.lua.Lua.LuaMethod;
+import com.javashell.openjvid.lua.swing.LuaComponent;
 import com.javashell.openjvid.lua.swing.LuaFrame;
 import com.javashell.openjvid.lua.swing.LuaImageWrapper;
 import com.javashell.openjvid.lua.swing.components.LuaBorder;

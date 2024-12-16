@@ -1,4 +1,4 @@
-package com.javashell.openjvid.lua;
+package com.javashell.openjvid.lua.swing;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -26,7 +26,6 @@ import javax.swing.JComponent;
 
 import com.hk.lua.Lua;
 import com.hk.lua.Lua.LuaMethod;
-import com.javashell.openjvid.lua.swing.LuaImageWrapper;
 import com.javashell.openjvid.lua.swing.components.LuaBorder;
 import com.hk.lua.LuaInterpreter;
 import com.hk.lua.LuaObject;

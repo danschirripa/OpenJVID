@@ -16,7 +16,7 @@ import com.hk.lua.LuaInterpreter;
 import com.hk.lua.LuaObject;
 import com.hk.lua.LuaType;
 import com.hk.lua.Lua.LuaMethod;
-import com.javashell.openjvid.lua.LuaComponent;
+import com.javashell.openjvid.lua.swing.LuaComponent;
 import com.javashell.openjvid.lua.swing.LuaImageWrapper;
 
 public class LuaCheckBox extends LuaComponent {

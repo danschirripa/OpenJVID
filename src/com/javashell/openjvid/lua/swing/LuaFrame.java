@@ -7,7 +7,6 @@ import javax.swing.JFrame;
 
 import com.hk.lua.Lua;
 import com.hk.lua.Lua.LuaMethod;
-import com.javashell.openjvid.lua.LuaComponent;
 import com.hk.lua.LuaInterpreter;
 import com.hk.lua.LuaObject;
 import com.hk.lua.LuaType;

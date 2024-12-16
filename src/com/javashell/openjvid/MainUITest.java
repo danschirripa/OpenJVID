@@ -6,14 +6,15 @@ import javax.swing.SwingUtilities;
 
 import com.hk.lua.LuaLibrary;
 import com.javashell.flow.FlowController;
-import com.javashell.openjvid.lua.JavashellSwingLuaLibrary;
 import com.javashell.openjvid.lua.JavashellLuaLibrary;
+import com.javashell.openjvid.lua.JavashellSwingLuaLibrary;
 import com.javashell.openjvid.lua.LuaManager;
 import com.javashell.openjvid.lua.exceptions.LuaLibraryLoadException;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
 
 public class MainUITest {
 	public static void main(String[] args) throws Exception {
+		// Setup system exit hooks to dump stack trace on clean exit for debugging
 		Thread hookThread = new Thread(new Runnable() {
 			public void run() {
 				System.err.println("SHUTDOWN, DUMPING STACK TRACE FOR DEBUG");
@@ -30,8 +31,7 @@ public class MainUITest {
 			}
 		});
 
-		File savedConfig = null;
-
+		// Import and register all Lua extensions
 		try {
 			LuaManager.registerHook("Socket", JavashellLuaLibrary.SOCKET);
 			LuaManager.registerHook("Timer", JavashellLuaLibrary.TIMER);
@@ -42,6 +42,10 @@ public class MainUITest {
 			e.printStackTrace();
 		}
 
+		// If a configuration file was provided as an argument, attempt to verify the
+		// specified file
+		File savedConfig = null;
+
 		if (args.length > 0) {
 			savedConfig = new File(args[0]);
 			if (!savedConfig.exists()) {
@@ -50,19 +54,28 @@ public class MainUITest {
 			}
 		}
 
+		// Add the exit hook declared above
 		Runtime.getRuntime().addShutdownHook(hookThread);
 
+		// Create the frame, (false = not emulation, true = emulation mode)
+		// Emulation mode creates dummy objects representative of actual flownodes, for
+		// graph creation without physical hardware
 		MainFrame mf = new MainFrame(false);
 
+		// Initiate the FlowController (Begin processing the graph)
 		FlowController.startFlowControl();
 
+		// Initialize the PeripheralDiscoveryService to find and communicate with other
+		// instances of OpenJVID on the local network
 		PeripheralDiscoveryService.initializeService();
 
+		// Finalize the file object for later loading in the Swing thread
 		final File toLoad = savedConfig;
 
 		if (savedConfig != null)
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
+					// Load the specified configuration to the graph
 					mf.loadConfiguration(toLoad);
 				}
 			});

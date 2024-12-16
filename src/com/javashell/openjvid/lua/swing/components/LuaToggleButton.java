@@ -13,7 +13,7 @@ import javax.swing.JToggleButton;
 
 import com.hk.lua.Lua;
 import com.hk.lua.Lua.LuaMethod;
-import com.javashell.openjvid.lua.LuaComponent;
+import com.javashell.openjvid.lua.swing.LuaComponent;
 import com.javashell.openjvid.lua.swing.LuaImageWrapper;
 import com.hk.lua.LuaInterpreter;
 import com.hk.lua.LuaObject;
