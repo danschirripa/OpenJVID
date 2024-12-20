@@ -7,7 +7,6 @@ import javax.swing.SwingUtilities;
 import com.hk.lua.LuaLibrary;
 import com.javashell.flow.FlowController;
 import com.javashell.openjvid.lua.JavashellLuaLibrary;
-import com.javashell.openjvid.lua.JavashellSwingLuaLibrary;
 import com.javashell.openjvid.lua.LuaManager;
 import com.javashell.openjvid.lua.exceptions.LuaLibraryLoadException;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
@@ -37,7 +36,7 @@ public class MainUITest {
 			LuaManager.registerHook("Timer", JavashellLuaLibrary.TIMER);
 			LuaManager.registerHook("Package", LuaLibrary.PACKAGE);
 			LuaManager.registerHook("Generic", JavashellLuaLibrary.JSH);
-			LuaManager.registerHook("Desktop", JavashellSwingLuaLibrary.DESKTOP);
+			LuaManager.registerHook("Desktop", JavashellLuaLibrary.DESKTOP);
 		} catch (LuaLibraryLoadException e) {
 			e.printStackTrace();
 		}

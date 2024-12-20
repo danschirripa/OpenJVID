@@ -10,4 +10,6 @@ public class JavashellLuaLibrary {
 	public static final LuaLibrary<LuaTimerLibrary> TIMER = new LuaLibrary<>("Timer", LuaTimerLibrary.class);
 	public static final LuaLibrary<JavashellGenericLuaLibrary> JSH = new LuaLibrary<>("Generic",
 			JavashellGenericLuaLibrary.class);
+	public static final LuaLibrary<LuaDesktopLibrary> DESKTOP = new LuaLibrary<>("Desktop", LuaDesktopLibrary.class);
+
 }

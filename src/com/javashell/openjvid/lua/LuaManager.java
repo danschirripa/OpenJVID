@@ -23,6 +23,10 @@ public class LuaManager {
 		luaLibs.put(hookQualifier, lib);
 	}
 
+	public static Hashtable<String, LuaLibrary<?>> getLibs() {
+		return luaLibs;
+	}
+
 	public static void deregisterHook(String hookQualifier) {
 		luaLibs.remove(hookQualifier);
 	}
