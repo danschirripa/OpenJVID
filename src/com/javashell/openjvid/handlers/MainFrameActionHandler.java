@@ -8,6 +8,7 @@ import java.awt.event.MouseMotionListener;
 import java.util.UUID;
 
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
 import com.javashell.flow.FlowController;
@@ -24,7 +25,7 @@ import com.javashell.video.VideoProcessor;
 public class MainFrameActionHandler implements MouseListener, MouseMotionListener, ActionListener {
 
 	public static final String ADD = "ADD", DELETE = "DELETE", EDITPROPS = "EDIT_PROPS", FILESAVE = "FILE_SAVE,",
-			FILELOAD = "FILE_LOAD", UPLOAD = "UPLOAD", DOWNLOAD = "DOWNLOAD";
+			FILELOAD = "FILE_LOAD", UPLOAD = "UPLOAD", DOWNLOAD = "DOWNLOAD", DEBUG = "DEBUG";
 
 	private final JNodeFlowPane flowPane;
 	private final MainFrame frame;
@@ -75,6 +76,9 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 		case UPLOAD:
 			UploadConfigurationDialog dia = new UploadConfigurationDialog();
 			dia.setVisible(true);
+		case DEBUG:
+			JMenuItem debugOption = (JMenuItem) e.getSource();
+			flowPane.setDebugLinkages(debugOption.isSelected());
 		}
 	}
 

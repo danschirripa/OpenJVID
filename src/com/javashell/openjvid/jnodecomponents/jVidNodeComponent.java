@@ -122,8 +122,11 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 	private class jVidControlNodePoint extends JNodeComponent.NodePoint {
 
+		private JNodeComponent parent;
+
 		public jVidControlNodePoint(JNodeFlowPane flow, JNodeComponent parent) {
 			super(flow, parent);
+			this.parent = parent;
 			setColor(Color.GRAY);
 		}
 
@@ -147,10 +150,18 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 				if (((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
 						.retrieveNodeContents() instanceof ControlInterface) {
 					ControlInterface thisInterface = (ControlInterface) node.retrieveNodeContents();
-					((ControlInterface) ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
-							.retrieveNodeContents()).addSubscriber(thisInterface);
+					Object nodeContents = ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
+							.retrieveNodeContents();
+					if (nodeContents instanceof ControlInterface) {
+						thisInterface.addSubscriber((ControlInterface) nodeContents);
+					}
 				}
 			}
+		}
+
+		@Override
+		public NodeType getNodeType() {
+			return parent.getNodeType();
 		}
 
 		@Override

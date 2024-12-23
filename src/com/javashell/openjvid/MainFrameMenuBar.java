@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -68,14 +69,19 @@ public class MainFrameMenuBar extends JMenuBar {
 		// Tools Menu item setup
 		JMenuItem toolUpload = new JMenuItem("Upload");
 		JMenuItem toolDownload = new JMenuItem("Download");
+		JCheckBoxMenuItem toolDebugLinks = new JCheckBoxMenuItem("Link Debugger");
 		toolsMenu.add(toolUpload);
 		toolsMenu.add(toolDownload);
+		toolsMenu.add(toolDebugLinks);
 
 		toolUpload.setActionCommand(MainFrameActionHandler.UPLOAD);
 		toolUpload.addActionListener(handler);
-		
+
 		toolDownload.setActionCommand(MainFrameActionHandler.DOWNLOAD);
 		toolDownload.addActionListener(handler);
+
+		toolDebugLinks.setActionCommand(MainFrameActionHandler.DEBUG);
+		toolDebugLinks.addActionListener(handler);
 
 		// Menu aggregation
 		add(fileMenu);
