@@ -13,7 +13,8 @@ import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.Type
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.egressors.LocalWindowEgressor;
 import com.javashell.video.egressors.NDI5Egressor;
-import com.javashell.video.egressors.QOYStreamEgressor;
+import com.javashell.video.egressors.QOYStreamEgressor_V2;
+import com.javashell.video.egressors.RawAudioEgressor;
 
 public class EgressNodeFactory {
 
@@ -58,7 +59,7 @@ public class EgressNodeFactory {
 	@TypeName(typeName = "QOYV Egress", nodeType = NodeType.Receiver)
 	public static jVidNodeComponent<VideoProcessor> createQOYVEgress(@Label(label = "Resolution") Dimension resolution,
 			@Label(label = "Key Frame Interval") int keyFrameInterval, JNodeFlowPane flowPane) {
-		QOYStreamEgressor qoyv = new QOYStreamEgressor(resolution, keyFrameInterval);
+		QOYStreamEgressor_V2 qoyv = new QOYStreamEgressor_V2(resolution, keyFrameInterval);
 		FlowNode<VideoProcessor> qoyvNode = new VideoFlowNode(qoyv, null, null);
 		jVidNodeComponent<VideoProcessor> qoyvNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, qoyvNode);
 		qoyvNodeComp.setNodeType(NodeType.Receiver);
@@ -72,5 +73,19 @@ public class EgressNodeFactory {
 		qoyv.open();
 
 		return qoyvNodeComp;
+	}
+
+	@TypeName(typeName = "Raw Audio Egressor", nodeType = NodeType.Receiver)
+	public static jVidNodeComponent<VideoProcessor> createRawAudioEgressor(@Label(label = "Channels") int channels,
+			@Label(label = "Port") int port, JNodeFlowPane flowPane) {
+		RawAudioEgressor raw = new RawAudioEgressor(new Dimension(1920, 1080), channels, port);
+		FlowNode<VideoProcessor> rawNode = new VideoFlowNode(raw, null, null);
+		jVidNodeComponent<VideoProcessor> rawNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, rawNode);
+		rawNodeComp.setNodeType(NodeType.Receiver);
+		rawNodeComp.setNodeName("Audio Out: " + port);
+
+		raw.open();
+
+		return rawNodeComp;
 	}
 }

@@ -1,5 +1,6 @@
 package com.javashell.openjvid.configuration;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,130 +20,169 @@ import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.UUID;
 
+import javax.swing.SwingUtilities;
+
 import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.JNodeFlowPane.Linkage;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.jnodecomponents.jVidMatrixNodeComponent;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
-import com.javashell.openjvid.ui.AddComponentDialog;
-import com.javashell.video.VideoProcessor;
+import com.javashell.openjvid.ui.components.AddComponentDialog;
+import com.javashell.openjvid.ui.components.ThrobberPopup;
 
 public class jVidConfigurationParser {
 
 	public static void loadConfiguration(JNodeFlowPane flowPane, File configuration) {
-		try (FileInputStream fin = new FileInputStream(configuration)) {
-			final HashMap<UUID, jVidNodeComponent<?>> compsByUUID = new HashMap<UUID, jVidNodeComponent<?>>();
-			final HashMap<UUID, HashSet<UUID>> linkagesByUUID = new HashMap<UUID, HashSet<UUID>>();
 
-			final HashMap<UUID, MatrixDescriptor> unrealizedMatrices = new HashMap<UUID, MatrixDescriptor>();
-			final Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>> matrixCrosspoints = new Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>>();
+		ThrobberPopup throb = new ThrobberPopup(200, 200, 8, Color.BLACK, 1.0f / 15.0f);
 
-			Scanner sc = new Scanner(fin);
-			sc.useDelimiter("\\n\\t:\\r");
-			while (sc.hasNext()) {
-				final String descriptor = sc.next();
-				final String[] values = descriptor.split("\n\t:");
-				if (values[0].equals("LINKAGE")) {
-					UUID originLink = UUID.fromString(values[1]);
-					HashSet<UUID> children = new HashSet<UUID>();
-					for (int i = 2; i < values.length; i++) {
-						children.add(UUID.fromString(values[i]));
+		Thread loadThread = new Thread(new Runnable() {
+			public void run() {
+				try (FileInputStream fin = new FileInputStream(configuration)) {
+					final HashMap<UUID, jVidNodeComponent<?>> compsByUUID = new HashMap<UUID, jVidNodeComponent<?>>();
+					final HashMap<UUID, HashSet<UUID>> linkagesByUUID = new HashMap<UUID, HashSet<UUID>>();
+
+					final HashMap<UUID, MatrixDescriptor> unrealizedMatrices = new HashMap<UUID, MatrixDescriptor>();
+					final Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>> matrixCrosspoints = new Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>>();
+
+					Scanner sc = new Scanner(fin);
+					sc.useDelimiter("\\n\\t:\\r");
+					while (sc.hasNext()) {
+						final String descriptor = sc.next();
+						final String[] values = descriptor.split("\n\t:");
+						if (values[0].equals("LINKAGE")) {
+							UUID originLink = UUID.fromString(values[1]);
+							HashSet<UUID> children = new HashSet<UUID>();
+							for (int i = 2; i < values.length; i++) {
+								children.add(UUID.fromString(values[i]));
+							}
+							linkagesByUUID.put(originLink, children);
+							continue;
+						}
+						if (values[0].equals("MATRIX")) {
+							UUID matrixID = UUID.fromString(values[1]);
+							Hashtable<UUID, HashSet<UUID>> crosspoints = new Hashtable<UUID, HashSet<UUID>>();
+							for (int i = 2; i < values.length; i++) {
+								System.out.println(values[i]);
+								var sourceID = UUID.fromString(values[i]);
+								var sinks = values[i + 1].split(",");
+								HashSet<UUID> sinkIDs = new HashSet<UUID>();
+								for (var sink : sinks)
+									sinkIDs.add(UUID.fromString(sink));
+
+								crosspoints.put(sourceID, sinkIDs);
+								i++;
+							}
+							matrixCrosspoints.put(matrixID, crosspoints);
+							continue;
+						}
+						final UUID nodeID = UUID.fromString(values[0]);
+						final String contentClass = values[1];
+
+						final int x = Integer.parseInt(values[2]);
+						final int y = Integer.parseInt(values[3]);
+
+						final Object[] parameters = new Object[values.length - 3];
+
+						for (int i = 4; i < values.length; i++) {
+							final byte[] decoded64 = Base64.getDecoder().decode(values[i]);
+							final ByteArrayInputStream bin = new ByteArrayInputStream(decoded64);
+							final ObjectInputStream oin = new ObjectInputStream(bin);
+							parameters[i - 4] = oin.readObject();
+						}
+						if (contentClass.startsWith("Matrix")) {
+							final MatrixDescriptor md = new MatrixDescriptor();
+							md.parameters = parameters;
+							md.x = x;
+							md.y = y;
+							md.contentClass = contentClass;
+							unrealizedMatrices.put(nodeID, md);
+							continue;
+						}
+						parameters[parameters.length - 1] = flowPane;
+						Method creationMethod = AddComponentDialog.callBackMethods.get(contentClass);
+						SwingUtilities.invokeAndWait(new Runnable() {
+							public void run() {
+								try {
+									jVidNodeComponent<?> vidComp = (jVidNodeComponent<?>) creationMethod.invoke(null,
+											parameters);
+									vidComp.setLocation(x, y);
+									compsByUUID.put(nodeID, vidComp);
+									flowPane.add(vidComp);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						});
+
 					}
-					linkagesByUUID.put(originLink, children);
-					continue;
-				}
-				if (values[0].equals("MATRIX")) {
-					UUID matrixID = UUID.fromString(values[1]);
-					Hashtable<UUID, HashSet<UUID>> crosspoints = new Hashtable<UUID, HashSet<UUID>>();
-					for (int i = 2; i < values.length; i++) {
-						System.out.println(values[i]);
-						var sourceID = UUID.fromString(values[i]);
-						var sinks = values[i + 1].split(",");
-						HashSet<UUID> sinkIDs = new HashSet<UUID>();
-						for (var sink : sinks)
-							sinkIDs.add(UUID.fromString(sink));
+					sc.close();
 
-						crosspoints.put(sourceID, sinkIDs);
-						i++;
+					for (UUID id : matrixCrosspoints.keySet()) {
+						final HashMap<jVidNodeComponent<?>, HashSet<jVidNodeComponent<?>>> crosspoints = new HashMap<jVidNodeComponent<?>, HashSet<jVidNodeComponent<?>>>();
+						for (var sourceID : matrixCrosspoints.get(id).keySet()) {
+							jVidNodeComponent<?> source = compsByUUID.get(sourceID);
+							final HashSet<jVidNodeComponent<?>> sinks = new HashSet<jVidNodeComponent<?>>();
+							for (var sinkID : matrixCrosspoints.get(id).get(sourceID)) {
+								sinks.add(compsByUUID.get(sinkID));
+							}
+							crosspoints.put(source, sinks);
+						}
+						MatrixDescriptor desc = unrealizedMatrices.get(id);
+						var parameters = Arrays.copyOf(desc.parameters, desc.parameters.length + 1);
+						parameters[parameters.length - 2] = crosspoints;
+						parameters[parameters.length - 1] = flowPane;
+						Method creationMethod = AddComponentDialog.callBackMethods.get(desc.contentClass);
+						SwingUtilities.invokeAndWait(new Runnable() {
+							public void run() {
+								try {
+									jVidNodeComponent<?> vidComp = (jVidNodeComponent<?>) creationMethod.invoke(null,
+											parameters);
+									vidComp.setLocation(desc.x, desc.y);
+									compsByUUID.put(id, vidComp);
+									flowPane.add(vidComp);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						});
+
 					}
-					matrixCrosspoints.put(matrixID, crosspoints);
-					continue;
-				}
-				final UUID nodeID = UUID.fromString(values[0]);
-				final String contentClass = values[1];
 
-				final int x = Integer.parseInt(values[2]);
-				final int y = Integer.parseInt(values[3]);
+					for (UUID id : linkagesByUUID.keySet()) {
+						jVidNodeComponent<?> origin = compsByUUID.get(id);
+						HashSet<UUID> children = linkagesByUUID.get(id);
+						SwingUtilities.invokeAndWait(new Runnable() {
+							public void run() {
+								for (UUID child : children) {
+									jVidNodeComponent<?> childNode = compsByUUID.get(child);
+									try {
+										flowPane.createLinkage(origin, childNode);
+									} catch (IncorrectLinkageException e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						});
 
-				final Object[] parameters = new Object[values.length - 3];
-
-				for (int i = 4; i < values.length; i++) {
-					final byte[] decoded64 = Base64.getDecoder().decode(values[i]);
-					final ByteArrayInputStream bin = new ByteArrayInputStream(decoded64);
-					final ObjectInputStream oin = new ObjectInputStream(bin);
-					parameters[i - 4] = oin.readObject();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
-				if (contentClass.startsWith("Matrix")) {
-					final MatrixDescriptor md = new MatrixDescriptor();
-					md.parameters = parameters;
-					md.x = x;
-					md.y = y;
-					md.contentClass = contentClass;
-					unrealizedMatrices.put(nodeID, md);
-					continue;
-				}
-				parameters[parameters.length - 1] = flowPane;
-				Method creationMethod = AddComponentDialog.callBackMethods.get(contentClass);
-				jVidNodeComponent<?> vidComp = (jVidNodeComponent<?>) creationMethod.invoke(null, parameters);
-				vidComp.setLocation(x, y);
-				compsByUUID.put(nodeID, vidComp);
-				flowPane.add(vidComp);
+				throb.dispose();
 			}
-			sc.close();
 
-			for (UUID id : matrixCrosspoints.keySet()) {
-				final HashMap<jVidNodeComponent<?>, HashSet<jVidNodeComponent<?>>> crosspoints = new HashMap<jVidNodeComponent<?>, HashSet<jVidNodeComponent<?>>>();
-				for (var sourceID : matrixCrosspoints.get(id).keySet()) {
-					jVidNodeComponent<?> source = compsByUUID.get(sourceID);
-					final HashSet<jVidNodeComponent<?>> sinks = new HashSet<jVidNodeComponent<?>>();
-					for (var sinkID : matrixCrosspoints.get(id).get(sourceID)) {
-						sinks.add(compsByUUID.get(sinkID));
-					}
-					crosspoints.put(source, sinks);
-				}
-				MatrixDescriptor desc = unrealizedMatrices.get(id);
-				var parameters = Arrays.copyOf(desc.parameters, desc.parameters.length + 1);
-				parameters[parameters.length - 2] = crosspoints;
-				parameters[parameters.length - 1] = flowPane;
-				Method creationMethod = AddComponentDialog.callBackMethods.get(desc.contentClass);
-				jVidNodeComponent<?> vidComp = (jVidNodeComponent<?>) creationMethod.invoke(null, parameters);
-				vidComp.setLocation(desc.x, desc.y);
-				compsByUUID.put(id, vidComp);
-				flowPane.add(vidComp);
-			}
+		});
 
-			for (UUID id : linkagesByUUID.keySet()) {
-				jVidNodeComponent<?> origin = compsByUUID.get(id);
-				HashSet<UUID> children = linkagesByUUID.get(id);
-				for (UUID child : children) {
-					jVidNodeComponent<?> childNode = compsByUUID.get(child);
-					try {
-						flowPane.createLinkage(origin, childNode);
-					} catch (IncorrectLinkageException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
+		loadThread.start();
+
 	}
 
 	public static String dumpConfiguration(JNodeFlowPane flowPane) {

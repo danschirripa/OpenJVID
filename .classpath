@@ -12,6 +12,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="assets"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JNodeGraph"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jVid"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">

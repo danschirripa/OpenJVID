@@ -18,6 +18,10 @@ import javax.swing.BorderFactory;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 
+import org.fife.ui.autocomplete.BasicCompletion;
+import org.fife.ui.autocomplete.CompletionProvider;
+import org.fife.ui.autocomplete.DefaultCompletionProvider;
+
 import com.hk.lua.Environment;
 import com.hk.lua.Lua;
 import com.hk.lua.Lua.LuaMethod;
@@ -170,6 +174,28 @@ public enum LuaDesktopLibrary implements BiConsumer<Environment, LuaObject>, Lua
 		String name = toString();
 		if (name != null && !name.trim().isEmpty())
 			table.rawSet(name, Lua.newMethod(this));
+	}
+
+	public static void updateCompletions(DefaultCompletionProvider cp) {
+
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateComponent()", "Create a JComponent Object"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateFrame()", "Create a new JFrame (Window)"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateToggleButton()", "Create a JToggleButton"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateCheckBox()", "Create a JCheckBox"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateComboBox(EntryTable)",
+				"Create a JComboBox, using the supplied entry table"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreatLabel()", "Create an empty JLabel"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateTextField()", "Create an empty JTextField"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateTextArea()", "Create an empty JTextArea"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateLineBorder(ColorString)",
+				"Create a line border of the given color"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateLoweredEtchedBorder()"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateRaisedEtchedBorder()"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateLoweredBevelBorder()"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.CreateRaisedBevelBorder()"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.GetImageFromBase64(ImageAsBase64)"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.GetImageFromURL(URLString)"));
+		cp.addCompletion(new BasicCompletion(cp, "Desktop.GetScreenCenter()"));
 	}
 
 }

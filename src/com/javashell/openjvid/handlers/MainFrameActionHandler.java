@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.File;
 import java.util.UUID;
 
 import javax.swing.JFileChooser;
@@ -15,11 +16,13 @@ import com.javashell.flow.FlowController;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.MainFrame;
 import com.javashell.openjvid.configuration.jVidConfigurationParser;
+import com.javashell.openjvid.configuration.jVidFileFilter;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.DigestNodeFactory;
 import com.javashell.openjvid.peripheral.PeripheralDescriptor;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
-import com.javashell.openjvid.ui.UploadConfigurationDialog;
+import com.javashell.openjvid.ui.components.DownloadConfigurationDialog;
+import com.javashell.openjvid.ui.components.UploadConfigurationDialog;
 import com.javashell.video.VideoProcessor;
 
 public class MainFrameActionHandler implements MouseListener, MouseMotionListener, ActionListener {
@@ -48,6 +51,8 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 		}
 	}
 
+	@SuppressWarnings("unchecked") // I hereby promise retrieveNodeContents is a
+									// jVidNodeComponent<VideoProcessor>...
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
@@ -63,12 +68,22 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 			break;
 		case FILESAVE:
 			JFileChooser selectionDialog = new JFileChooser();
+			jVidFileFilter filter = new jVidFileFilter();
+			selectionDialog.addChoosableFileFilter(filter);
+			selectionDialog.setFileFilter(filter);
 			if (selectionDialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-				jVidConfigurationParser.saveConfiguration(flowPane, selectionDialog.getSelectedFile());
+				File selectedFile = selectionDialog.getSelectedFile();
+				if (!selectedFile.getName().endsWith(".jvid")) {
+					selectedFile = new File(selectedFile.getAbsolutePath() + ".jvid");
+				}
+				jVidConfigurationParser.saveConfiguration(flowPane, selectedFile);
 			}
 			break;
 		case FILELOAD:
 			selectionDialog = new JFileChooser();
+			filter = new jVidFileFilter();
+			selectionDialog.addChoosableFileFilter(filter);
+			selectionDialog.setFileFilter(filter);
 			if (selectionDialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 				jVidConfigurationParser.loadConfiguration(flowPane, selectionDialog.getSelectedFile());
 			}
@@ -76,9 +91,15 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 		case UPLOAD:
 			UploadConfigurationDialog dia = new UploadConfigurationDialog();
 			dia.setVisible(true);
+			break;
+		case DOWNLOAD:
+			DownloadConfigurationDialog downdia = new DownloadConfigurationDialog();
+			downdia.setVisible(true);
+			break;
 		case DEBUG:
 			JMenuItem debugOption = (JMenuItem) e.getSource();
 			flowPane.setDebugLinkages(debugOption.isSelected());
+			break;
 		}
 	}
 

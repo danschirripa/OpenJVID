@@ -1,7 +1,6 @@
 package com.javashell.openjvid.lua;
 
 import com.hk.lua.LuaLibrary;
-import com.javashell.openjvid.lua.utilities.LuaSocketHandlerLibrary;
 import com.javashell.openjvid.lua.utilities.LuaTimerLibrary;
 
 public class JavashellLuaLibrary {

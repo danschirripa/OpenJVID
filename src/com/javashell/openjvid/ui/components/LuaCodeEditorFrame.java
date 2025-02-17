@@ -13,14 +13,19 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.ShorthandCompletion;
 import org.fife.ui.rsyntaxtextarea.FileLocation;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.TextEditorPane;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
+
+import com.javashell.openjvid.lua.JavashellGenericLuaLibrary;
+import com.javashell.openjvid.lua.LuaDesktopLibrary;
 
 public class LuaCodeEditorFrame extends JFrame {
 	private TextEditorPane area;
@@ -71,12 +76,19 @@ public class LuaCodeEditorFrame extends JFrame {
 		area.setBracketMatchingEnabled(true);
 		area.setMarkOccurrences(true);
 
-		DefaultCompletionProvider cp = new DefaultCompletionProvider();
-		cp.setAutoActivationRules(false, ".:");
-
-		// TODO AutoCompletion
-
 		editorScroller = new RTextScrollPane(area);
+
+		CompletionProvider cp = createCompletionProvider();
+
+		AutoCompletion ac = new AutoCompletion(cp);
+		ac.setShowDescWindow(true);
+		ac.setParameterAssistanceEnabled(true);
+
+		ac.setAutoCompleteEnabled(true);
+		ac.setAutoActivationEnabled(true);
+		ac.setAutoCompleteSingleChoices(false);
+		ac.setAutoActivationDelay(800);
+		ac.install(area);
 
 		setSize(600, 600);
 		editorScroller.setPreferredSize(new Dimension(600, 600));
@@ -87,6 +99,10 @@ public class LuaCodeEditorFrame extends JFrame {
 		// setJMenuBar(createMenuBar());
 		pack();
 		setVisible(true);
+	}
+
+	public String getScriptText() {
+		return area.getText();
 	}
 
 	private JMenuBar createMenuBar() {
@@ -120,6 +136,16 @@ public class LuaCodeEditorFrame extends JFrame {
 		provider.addCompletion(new BasicCompletion(provider, "function"));
 		provider.addCompletion(new BasicCompletion(provider, "end"));
 		provider.addCompletion(new BasicCompletion(provider, "--[[]]--"));
+
+		provider.addCompletion(new ShorthandCompletion(provider, "initargs",
+				"--[[\n" + " Pack varargs into more standard format, extract this component\n" + "]]--\n"
+						+ "args = table.pack(...);\n" + "\n" + "-- \n" + "Node = args[1];\n"
+						+ "NodeName = Node:GetNodeName();"));
+
+		provider.setAutoActivationRules(true, null);
+
+		JavashellGenericLuaLibrary.updateCompletions(provider);
+		LuaDesktopLibrary.updateCompletions(provider);
 
 		return provider;
 

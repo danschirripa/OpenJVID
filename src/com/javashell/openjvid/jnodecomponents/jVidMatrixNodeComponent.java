@@ -1,19 +1,16 @@
 package com.javashell.openjvid.jnodecomponents;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.UUID;
 
-import javax.swing.SwingUtilities;
-
 import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.NodeType;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
-import com.javashell.openjvid.ui.MatrixDigestorCrosspointDialog;
+import com.javashell.openjvid.ui.components.MatrixDigestorCrosspointDialog;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.digestors.MatrixDigestor;
 

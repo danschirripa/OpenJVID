@@ -1,6 +1,7 @@
 package com.javashell.openjvid.jnodecomponents.processors;
 
 import java.awt.Dimension;
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
@@ -11,19 +12,17 @@ import com.javashell.audio.dsp.CombFilter.CombFilterType;
 import com.javashell.audio.dsp.GainFilter;
 import com.javashell.flow.FlowNode;
 import com.javashell.flow.VideoFlowNode;
-import com.javashell.jnodegraph.JNodeComponent;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.NodeType;
-import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.jnodecomponents.DigitalSignalDigestor;
 import com.javashell.openjvid.jnodecomponents.OpenJVIDPeripheral;
 import com.javashell.openjvid.jnodecomponents.jVidMatrixNodeComponent;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
+import com.javashell.openjvid.jnodecomponents.jVidScriptedComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.openjvid.peripheral.PeripheralDescriptor;
-import com.javashell.openjvid.ui.MatrixDigestorCrosspointDialog;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.digestors.AudioExtractorDigestor;
 import com.javashell.video.digestors.AudioInjectorDigestor;
@@ -303,6 +302,52 @@ public class DigestNodeFactory {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	@TypeName(typeName = "jVid Scripted Component", nodeType = NodeType.Transceiver)
+	public static jVidNodeComponent<VideoProcessor> createScriptedComponent(
+			@Label(label = "Script File") String scriptFilePath, @Label(label = "Name") String name,
+			JNodeFlowPane flowPane) {
+
+		jVidScriptedComponent comp;
+		jVidNodeComponentDescriptor<VideoProcessor> desc;
+		if (scriptFilePath.isEmpty()) {
+			comp = new jVidScriptedComponent(flowPane);
+			desc = new jVidNodeComponentDescriptor<VideoProcessor>("jVid Scripted Component - Script", "", name);
+		} else {
+			try {
+				FileInputStream fin = new FileInputStream(scriptFilePath);
+				byte[] script = fin.readAllBytes();
+				String scriptString = new String(script);
+				fin.close();
+
+				comp = new jVidScriptedComponent(scriptString, flowPane);
+				desc = new jVidNodeComponentDescriptor<VideoProcessor>("jVid Scripted Component - Script", scriptString,
+						name);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				comp = new jVidScriptedComponent(flowPane);
+				desc = new jVidNodeComponentDescriptor<VideoProcessor>("jVid Scripted Component - Script", "", name);
+			}
+		}
+		comp.setNodeName(name);
+		comp.setNodeComponentDescriptor(desc);
+		return comp;
+	}
+
+	@TypeName(typeName = "jVid Scripted Component - Script", isShown = false, nodeType = NodeType.Transceiver)
+	public static jVidNodeComponent<VideoProcessor> createScriptedWithScriptComponent(
+			@Label(label = "Script") String script, @Label(label = "Name") String name, JNodeFlowPane flowPane) {
+		jVidScriptedComponent comp;
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"jVid Scripted Component - Script", script, name);
+
+		comp = new jVidScriptedComponent(script, flowPane);
+		comp.setNodeName(name);
+		comp.setNodeComponentDescriptor(desc);
+
+		return comp;
 	}
 
 }

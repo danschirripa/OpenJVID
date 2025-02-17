@@ -16,7 +16,7 @@ import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
-import com.javashell.openjvid.ui.components.JackInputComponent.JackInputClient;
+import com.javashell.openjvid.ui.components.input.JackInputComponent.JackInputClient;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.camera.Camera;
 import com.javashell.video.camera.extras.AmcrestCameraInterface;
@@ -25,7 +25,8 @@ import com.javashell.video.ingestors.FFMPEGIngestor;
 import com.javashell.video.ingestors.GStreamerIngestor;
 import com.javashell.video.ingestors.LocalScreenIngestor;
 import com.javashell.video.ingestors.NDI5Ingestor;
-import com.javashell.video.ingestors.QOYStreamIngestor;
+import com.javashell.video.ingestors.QOYStreamIngestor_V2;
+import com.javashell.video.ingestors.RawAudioIngestor;
 
 public class IngestNodeFactory {
 
@@ -79,7 +80,7 @@ public class IngestNodeFactory {
 			@Label(label = "Port") int port, JNodeFlowPane flowPane) {
 
 		var isMulticast = false;
-		QOYStreamIngestor qoyv = new QOYStreamIngestor(resolution, ip, port, isMulticast);
+		QOYStreamIngestor_V2 qoyv = new QOYStreamIngestor_V2(resolution, ip, port, isMulticast);
 		FlowNode<VideoProcessor> qoyvNode = new VideoFlowNode(qoyv, null, null);
 		jVidNodeComponent<VideoProcessor> qoyvNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, qoyvNode);
 		FlowController.registerFlowNode(qoyvNode);
@@ -107,7 +108,7 @@ public class IngestNodeFactory {
 		gstNodeComp.setNodeType(NodeType.Transmitter);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
-				"GStreamer Ingest", resolution, gstNode);
+				"GStreamer Ingest", resolution, gstString);
 
 		gstNodeComp.setNodeComponentDescriptor(desc);
 
@@ -282,6 +283,20 @@ public class IngestNodeFactory {
 		}
 
 		return null;
+	}
+
+	@TypeName(typeName = "Raw Audio Ingestor", nodeType = NodeType.Transmitter)
+	public static jVidNodeComponent<VideoProcessor> createRawAudioIngestor(@Label(label = "Channels") int channels,
+			@Label(label = "Port") int port, @Label(label = "Source IP") String ipAddress, JNodeFlowPane flowPane) {
+		RawAudioIngestor raw = new RawAudioIngestor(new Dimension(1920, 1080), channels, port, ipAddress);
+		FlowNode<VideoProcessor> rawNode = new VideoFlowNode(raw, null, null);
+		jVidNodeComponent<VideoProcessor> rawNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, rawNode);
+		rawNodeComp.setNodeType(NodeType.Transmitter);
+		rawNodeComp.setNodeName(ipAddress + ":" + port);
+
+		raw.open();
+
+		return rawNodeComp;
 	}
 
 }

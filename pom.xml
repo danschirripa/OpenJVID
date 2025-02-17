@@ -53,6 +53,17 @@
 			<artifactId>autocomplete</artifactId>
 			<version>3.3.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20240303</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-all</artifactId>
+			<version>1.18</version>
+		</dependency>
+
 		<!--
 		https://mvnrepository.com/artifact/org.eclipse.swt/org.eclipse.swt.gtk.linux.x86_64 -->
 		<dependency>

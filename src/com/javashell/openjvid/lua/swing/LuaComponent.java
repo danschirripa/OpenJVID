@@ -893,7 +893,7 @@ public class LuaComponent extends LuaUserdata implements Serializable {
 		LuaObject setBackgroundColor = Lua.newFunc(new Consumer<LuaObject[]>() {
 
 			@Override
-			public void accept(LuaObject[] args) {
+			public void accept(LuaObject[] args) { 
 				Lua.checkArgs("SetBackground", args, LuaType.USERDATA, LuaType.STRING);
 				LuaComponent lc = (LuaComponent) args[0];
 

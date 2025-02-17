@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.function.Consumer;
 
 import javax.swing.JFrame;
+import javax.swing.JLayeredPane;
 
 import com.hk.lua.Lua;
 import com.hk.lua.Lua.LuaMethod;
@@ -15,11 +16,23 @@ import com.hk.lua.LuaUserdata;
 public class LuaFrame extends LuaUserdata implements Serializable {
 	private JFrame wrappedFrame;
 	private LuaInterpreter interp;
+	private JLayeredPane layeredContentPane;
 	private static final LuaObject luaFrameMetatable = Lua.newTable();
+
+	public LuaFrame(LuaInterpreter interp, LuaComponent contentComponent) {
+		this.wrappedFrame = new JFrame();
+		this.interp = interp;
+		layeredContentPane = new JLayeredPane();
+		wrappedFrame.setContentPane(layeredContentPane);
+		layeredContentPane.add(contentComponent.getComponent(), JLayeredPane.DEFAULT_LAYER);
+		metatable = luaFrameMetatable;
+	}
 
 	public LuaFrame(LuaInterpreter interp) {
 		this.wrappedFrame = new JFrame();
 		this.interp = interp;
+		layeredContentPane = new JLayeredPane();
+		wrappedFrame.setContentPane(layeredContentPane);
 		metatable = luaFrameMetatable;
 	}
 
@@ -161,6 +174,19 @@ public class LuaFrame extends LuaUserdata implements Serializable {
 
 		});
 
+		LuaObject changeComponentLayerFunction = Lua.newFunc(new Consumer<LuaObject[]>() {
+
+			@Override
+			public void accept(LuaObject[] args) {
+				Lua.checkArgs("SetLayer", args, LuaType.USERDATA, LuaType.USERDATA, LuaType.INTEGER);
+				LuaFrame lbf = (LuaFrame) args[0];
+				LuaComponent toMove = (LuaComponent) args[1];
+				int newLayer = args[2].getInt();
+				lbf.layeredContentPane.setLayer(toMove.getComponent(), newLayer);
+			}
+
+		});
+
 		luaFrameMetatable.rawSet("SetVisible", setVisibleFunction);
 		luaFrameMetatable.rawSet("GetVisible", getVisibleFunction);
 		luaFrameMetatable.rawSet("SetSize", setSizeFunction);
@@ -170,6 +196,8 @@ public class LuaFrame extends LuaUserdata implements Serializable {
 		luaFrameMetatable.rawSet("SetTitle", setTitleFunction);
 		luaFrameMetatable.rawSet("SetLocation", setLocationFunction);
 		luaFrameMetatable.rawSet("Repaint", repaintFunction);
+		luaFrameMetatable.rawSet("SetLayer", changeComponentLayerFunction);
+
 	}
 
 }

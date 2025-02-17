@@ -33,7 +33,7 @@ import com.google.gson.GsonBuilder;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
-import com.javashell.openjvid.ui.AddComponentDialog;
+import com.javashell.openjvid.ui.components.AddComponentDialog;
 
 public class PeripheralDiscoveryService {
 
@@ -221,8 +221,12 @@ public class PeripheralDiscoveryService {
 				e.printStackTrace();
 			}
 		} else if (command.equals(PeripheralServerCommands.DOWNLOAD_CONFIGURATION.name())) {
+			System.out.println("Received request for configuration download...");
 			final String configurationString = jVidConfigurationParser.dumpConfiguration(flowPane);
-			sock.getOutputStream().write(configurationString.getBytes());
+			final byte[] confBytes = configurationString.getBytes();
+			sock.getOutputStream().write(ByteBuffer.allocate(4).putInt(confBytes.length).array());
+			sock.getOutputStream().write(confBytes);
+			sock.getOutputStream().flush();
 		}
 		bin.close();
 		sock.close();
@@ -266,6 +270,26 @@ public class PeripheralDiscoveryService {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static String downloadConfiguration(PeripheralDescriptor desc) {
+		System.out.println(
+				"Attempting to download configuration file from " + desc.getInetAddress().getCanonicalHostName());
+		try (Socket sock = new Socket()) {
+			sock.connect(new InetSocketAddress(desc.getInetAddress(), PORT));
+			System.out.println("Connection successful");
+			sock.getOutputStream().write((PeripheralServerCommands.DOWNLOAD_CONFIGURATION.name() + "\n").getBytes());
+			final byte[] lengthBytes = sock.getInputStream().readNBytes(4);
+			final int length = ByteBuffer.wrap(lengthBytes).getInt();
+			System.out.println("Config is " + length + " bytes");
+			final byte[] configBytes = sock.getInputStream().readNBytes(length);
+			System.out.println("Received config");
+			sock.close();
+			return new String(configBytes);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	public static Hashtable<InetAddress, PeripheralDescriptor> getDiscoveredPeripherals() {
