@@ -2,7 +2,7 @@ package com.javashell.openjvid.ui;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import javax.swing.ImageIcon;
@@ -13,12 +13,14 @@ import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 
+import com.hk.collections.lists.SortedList;
+
 public final class IconManager {
-	private final static HashSet<String> iconNames;
+	private final static SortedList<String> iconNames;
 	static {
 		// Load all available icon names
-		iconNames = new HashSet<String>();
-		InputStream fileDbStream = IconManager.class.getResourceAsStream("/assets/icons/default_pack/icon.lst");
+		iconNames = new SortedList<String>();
+		InputStream fileDbStream = IconManager.class.getResourceAsStream("/icons/default_pack/icon.lst");
 		Scanner sc = new Scanner(fileDbStream);
 		while (sc.hasNextLine()) {
 			String nextFileName = sc.nextLine();
@@ -27,18 +29,18 @@ public final class IconManager {
 		sc.close();
 	}
 
-	public static HashSet<String> getIconNames() {
+	public static SortedList<String> getIconNames() {
 		return iconNames;
 	}
 
-	public static ImageIcon getSVGIcon(String iconName, int width, int height) {
+	public static ImageIcon getSVGIcon(String iconName, float width, float height) {
 		try {
 			BufferedImageTranscoder transcoder = new BufferedImageTranscoder();
 			transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width);
 			transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height);
 			TranscoderInput input = new TranscoderInput();
 			final InputStream iconInputStream = IconManager.class
-					.getResourceAsStream("/assets/icons/default_pack/" + iconName + ".svg");
+					.getResourceAsStream("/icons/default_pack/" + iconName);
 			input.setInputStream(iconInputStream);
 			transcoder.transcode(input, null);
 			ImageIcon icon = new ImageIcon(transcoder.getFinalImage());

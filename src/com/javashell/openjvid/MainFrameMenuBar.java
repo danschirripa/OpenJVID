@@ -17,6 +17,7 @@ import javax.swing.JMenuItem;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
+import com.javashell.openjvid.ui.components.IconViewer;
 
 public class MainFrameMenuBar extends JMenuBar {
 	private MainFrameActionHandler handler;
@@ -69,9 +70,14 @@ public class MainFrameMenuBar extends JMenuBar {
 		// Tools Menu item setup
 		JMenuItem toolUpload = new JMenuItem("Upload");
 		JMenuItem toolDownload = new JMenuItem("Download");
+		JMenuItem toolIconPreview = new JMenuItem("Icons");
+
 		JCheckBoxMenuItem toolDebugLinks = new JCheckBoxMenuItem("Link Debugger");
+
 		toolsMenu.add(toolUpload);
 		toolsMenu.add(toolDownload);
+		toolsMenu.add(toolIconPreview);
+		toolsMenu.addSeparator();
 		toolsMenu.add(toolDebugLinks);
 
 		toolUpload.setActionCommand(MainFrameActionHandler.UPLOAD);
@@ -79,6 +85,10 @@ public class MainFrameMenuBar extends JMenuBar {
 
 		toolDownload.setActionCommand(MainFrameActionHandler.DOWNLOAD);
 		toolDownload.addActionListener(handler);
+
+		toolIconPreview.addActionListener((e) -> {
+			new IconViewer();
+		});
 
 		toolDebugLinks.setActionCommand(MainFrameActionHandler.DEBUG);
 		toolDebugLinks.addActionListener(handler);
