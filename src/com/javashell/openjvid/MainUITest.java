@@ -6,6 +6,7 @@ import javax.swing.SwingUtilities;
 
 import com.hk.lua.LuaLibrary;
 import com.javashell.flow.FlowController;
+import com.javashell.openjvid.lua.JVIDLuaLibrary;
 import com.javashell.openjvid.lua.JavashellLuaLibrary;
 import com.javashell.openjvid.lua.LuaManager;
 import com.javashell.openjvid.lua.exceptions.LuaLibraryLoadException;
@@ -30,17 +31,6 @@ public class MainUITest {
 			}
 		});
 
-		// Import and register all Lua extensions
-		try {
-			LuaManager.registerHook("Socket", JavashellLuaLibrary.SOCKET);
-			LuaManager.registerHook("Timer", JavashellLuaLibrary.TIMER);
-			LuaManager.registerHook("Package", LuaLibrary.PACKAGE);
-			LuaManager.registerHook("Generic", JavashellLuaLibrary.JSH);
-			LuaManager.registerHook("Desktop", JavashellLuaLibrary.DESKTOP);
-		} catch (LuaLibraryLoadException e) {
-			e.printStackTrace();
-		}
-
 		// If a configuration file was provided as an argument, attempt to verify the
 		// specified file
 		File savedConfig = null;
@@ -60,6 +50,23 @@ public class MainUITest {
 		// Emulation mode creates dummy objects representative of actual flownodes, for
 		// graph creation without physical hardware
 		MainFrame mf = new MainFrame(false);
+
+		// Import and register all Lua extensions
+		try {
+			LuaManager.registerHook("Socket", JavashellLuaLibrary.SOCKET);
+			LuaManager.registerHook("Timer", JavashellLuaLibrary.TIMER);
+			LuaManager.registerHook("Package", LuaLibrary.PACKAGE);
+			LuaManager.registerHook("Generic", JavashellLuaLibrary.JSH);
+			LuaManager.registerHook("Desktop", JavashellLuaLibrary.DESKTOP);
+
+			JVIDLuaLibrary jvidLib = new JVIDLuaLibrary(mf, mf.getFlowPane());
+
+			final LuaLibrary<JVIDLuaLibrary.Lib> SYSTEM = new LuaLibrary<>("System", JVIDLuaLibrary.Lib.class);
+			LuaManager.registerHook("System", SYSTEM);
+
+		} catch (LuaLibraryLoadException e) {
+			e.printStackTrace();
+		}
 
 		// Initiate the FlowController (Begin processing the graph)
 		FlowController.startFlowControl();

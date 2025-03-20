@@ -87,4 +87,8 @@ public class MainFrame extends JFrame {
 		return nodeComponents;
 	}
 
+	protected JNodeFlowPane getFlowPane() {
+		return flowPane;
+	}
+
 }

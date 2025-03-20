@@ -3,6 +3,7 @@ package com.javashell.openjvid.jnodecomponents;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -39,16 +40,16 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		}
 	}
 
+	public void preSave() {
+
+	}
+
 	public void setNodeComponentDescriptor(jVidNodeComponentDescriptor<T> desc) {
 		this.desc = desc;
 	}
 
 	public jVidNodeComponentDescriptor<T> getNodeComponentDescriptor() {
 		return desc;
-	}
-
-	public void preSave() {
-
 	}
 
 	private JMenu createPopupMenu(JNodeFlowPane ha) {

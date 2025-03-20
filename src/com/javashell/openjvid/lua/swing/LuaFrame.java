@@ -1,5 +1,5 @@
 package com.javashell.openjvid.lua.swing;
-
+import java.awt.Frame;
 import java.io.Serializable;
 import java.util.function.Consumer;
 
@@ -187,6 +187,30 @@ public class LuaFrame extends LuaUserdata implements Serializable {
 
 		});
 
+		LuaObject setUndecoratedFunction = Lua.newFunc(new Consumer<LuaObject[]>() {
+			public void accept(LuaObject[] args) {
+				Lua.checkArgs("SetUndecorated", args, LuaType.USERDATA, LuaType.BOOLEAN);
+				LuaFrame lbf = (LuaFrame) args[0];
+				lbf.wrappedFrame.setUndecorated(args[1].getBoolean());
+			}
+		});
+
+		LuaObject setFullScreenFunction = Lua.newFunc(new Consumer<LuaObject[]>() {
+			public void accept(LuaObject[] args) {
+				Lua.checkArgs("SetFullScreen", args, LuaType.USERDATA, LuaType.BOOLEAN);
+				LuaFrame lbf = (LuaFrame) args[0];
+				JFrame frame = lbf.wrappedFrame;
+				boolean isFull = args[1].getBoolean();
+				if (isFull) {
+					frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+					frame.setUndecorated(true);
+				} else {
+					frame.setSize(frame.getMaximumSize());
+					frame.setUndecorated(false);
+				}
+			}
+		});
+
 		luaFrameMetatable.rawSet("SetVisible", setVisibleFunction);
 		luaFrameMetatable.rawSet("GetVisible", getVisibleFunction);
 		luaFrameMetatable.rawSet("SetSize", setSizeFunction);
@@ -197,6 +221,8 @@ public class LuaFrame extends LuaUserdata implements Serializable {
 		luaFrameMetatable.rawSet("SetLocation", setLocationFunction);
 		luaFrameMetatable.rawSet("Repaint", repaintFunction);
 		luaFrameMetatable.rawSet("SetLayer", changeComponentLayerFunction);
+		luaFrameMetatable.rawSet("SetUndecorated", setUndecoratedFunction);
+		luaFrameMetatable.rawSet("SetFullScreen", setFullScreenFunction);
 
 	}
 

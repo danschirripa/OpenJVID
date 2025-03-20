@@ -2,9 +2,10 @@ package com.javashell.openjvid.jnodecomponents;
 
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.event.WindowStateListener;
 import java.awt.image.BufferedImage;
-import java.util.HashSet;
 
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -18,7 +19,6 @@ import com.javashell.openjvid.lua.LuaManager;
 import com.javashell.openjvid.lua.swing.LuaComponent;
 import com.javashell.openjvid.lua.utilities.LuajVidNodeComponent;
 import com.javashell.openjvid.ui.components.LuaCodeEditorFrame;
-import com.javashell.video.ControlInterface;
 import com.javashell.video.VideoProcessor;
 
 public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
@@ -79,18 +79,21 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 			if (isEditing == false) {
 				isEditing = true;
 				var lcem = new LuaCodeEditorFrame(script, getName());
+				lcem.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 				lcem.addWindowListener(new WindowListener() {
 
 					@Override
 					public void windowActivated(WindowEvent arg0) {
 						// TODO Auto-generated method stub
-
 					}
 
 					@Override
 					public void windowClosed(WindowEvent arg0) {
-
+						isEditing = false;
+						script = lcem.getScriptText();
+						startScript();
+						getNodeComponentDescriptor().setInitArgs(new Object[] { script, getNodeName() });
 					}
 
 					@Override
@@ -101,10 +104,6 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 
 					@Override
 					public void windowDeactivated(WindowEvent arg0) {
-						isEditing = false;
-						script = lcem.getScriptText();
-						startScript();
-						getNodeComponentDescriptor().setInitArgs(new Object[] { script, getNodeName() });
 					}
 
 					@Override

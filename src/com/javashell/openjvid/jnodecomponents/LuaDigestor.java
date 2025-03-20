@@ -2,6 +2,7 @@ package com.javashell.openjvid.jnodecomponents;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import com.javashell.video.ControlInterface;
@@ -61,6 +62,30 @@ public class LuaDigestor extends VideoDigestor implements ControlInterface {
 	public void fireControl(Object args) {
 		for (var cf : subscribers)
 			cf.processControl(args);
+	}
+
+	@Override
+	public HashMap<String, Object> getPropertyTable() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setPropertyTable(HashMap<String, Object> table) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setProperty(String key, Object value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Object getProperty(String key) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

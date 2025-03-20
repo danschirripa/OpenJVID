@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.UUID;
 
 import com.javashell.openjvid.peripheral.PeripheralDescriptor;
@@ -117,6 +118,30 @@ public class OpenJVIDPeripheral implements VideoProcessor {
 
 	@Override
 	public Dimension getResolution() {
+		return null;
+	}
+
+	@Override
+	public HashMap<String, Object> getPropertyTable() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setPropertyTable(HashMap<String, Object> table) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setProperty(String key, Object value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Object getProperty(String key) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

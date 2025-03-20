@@ -195,6 +195,7 @@ public class IngestNodeFactory {
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
 				"FFmpeg Ingest (String)", resolution, videoInput);
+		ffmpegNodeComp.setNodeComponentDescriptor(desc);
 
 		ffmpeg.open();
 

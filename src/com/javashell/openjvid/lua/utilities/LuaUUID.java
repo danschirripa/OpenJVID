@@ -44,12 +44,14 @@ public class LuaUUID extends LuaUserdata {
 
 			@Override
 			public LuaObject call(LuaInterpreter interp, LuaObject[] args) {
-				Lua.checkArgs("getUUID", args, LuaType.USERDATA);
+				Lua.checkArgs("GetUUID", args, LuaType.USERDATA);
 				LuaUUID lu = (LuaUUID) args[0];
 				return Lua.newString(lu.uuid.toString());
 			}
 
 		});
+
+		luaUUIDMetatable.rawSet("GetUUID", getUUIDAsStringFunction);
 	}
 
 }
