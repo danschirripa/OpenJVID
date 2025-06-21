@@ -113,6 +113,7 @@ public class AddComponentDialog extends JDialog {
 
 		componentTypes = Arrays.copyOfRange(_componentTypes, 0, ctIndex);
 		shownComponentTypes = Arrays.copyOfRange(_shownComponentTypes, 0, sctIndex);
+		Arrays.sort(shownComponentTypes);
 	}
 
 	private static JPanel currentInputPanel;
@@ -121,13 +122,14 @@ public class AddComponentDialog extends JDialog {
 
 	public AddComponentDialog(Frame owner, JNodeFlowPane pane, boolean isEmulated) {
 		super(owner, "Add Component", true);
+		this.setLocation(owner.getLocation());
 		this.isEmulated = isEmulated;
 		this.pane = pane;
 
 		JComboBox<String> componentSelection = new JComboBox<String>(shownComponentTypes);
 		// Component selection will drive jpanel generation via generateInputPanel based
 		// on the selected component type
-		currentInputPanel = generateInputPanel(callBackMethods.get(shownComponentTypes[0]));
+		currentInputPanel = generateInputPanel(callBackMethods.get(componentSelection.getSelectedItem().toString()));
 		componentSelection.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {

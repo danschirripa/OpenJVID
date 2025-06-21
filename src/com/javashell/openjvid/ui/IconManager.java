@@ -2,7 +2,6 @@ package com.javashell.openjvid.ui;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 import javax.swing.ImageIcon;
@@ -43,7 +42,12 @@ public final class IconManager {
 					.getResourceAsStream("/icons/default_pack/" + iconName);
 			input.setInputStream(iconInputStream);
 			transcoder.transcode(input, null);
-			ImageIcon icon = new ImageIcon(transcoder.getFinalImage());
+
+			BufferedImage transOut = transcoder.getFinalImage();
+			BufferedImage finalImage = new BufferedImage(transOut.getWidth(), transOut.getHeight(), transOut.getType());
+			finalImage.createGraphics().drawImage(transOut, 0, 0, null);
+
+			ImageIcon icon = new ImageIcon(finalImage);
 			return icon;
 		} catch (Exception e) {
 			e.printStackTrace();

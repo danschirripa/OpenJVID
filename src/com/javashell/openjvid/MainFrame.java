@@ -1,6 +1,7 @@
 package com.javashell.openjvid;
 
 import java.awt.Component;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
@@ -36,6 +37,7 @@ public class MainFrame extends JFrame {
 				RadianceThemingCortex.GlobalScope.setSkin(new GraphiteSiennaSkin());
 				createFrame();
 				setSize(500, 500);
+				setLocation(GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint());
 				setVisible(true);
 				setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			}

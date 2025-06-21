@@ -1,12 +1,13 @@
 package com.javashell.openjvid.jnodecomponents;
 
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 import com.javashell.audio.AudioProcessor;
 import com.javashell.flow.FlowNode;
@@ -16,28 +17,42 @@ import com.javashell.jnodegraph.NodeType;
 import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
+import com.javashell.openjvid.ui.IconManager;
 import com.javashell.video.ControlInterface;
 
 public class jVidNodeComponent<T> extends JNodeComponent {
 	private final FlowNode<T> node;
-	private boolean hasControlInterface = false, hasAudioProcessor = false;
 	private jVidNodeComponentDescriptor<T> desc;
+
+	private static final HashMap<NodeType, Image> defaultIcons = new HashMap<NodeType, Image>();
+
+	static {
+		defaultIcons.put(NodeType.Receiver, IconManager.getSVGIcon("Transfer_long_left.svg", 100, 100).getImage());
+		defaultIcons.put(NodeType.Transceiver, IconManager.getSVGIcon("Transger.svg", 100, 100).getImage());
+		defaultIcons.put(NodeType.Transmitter, IconManager.getSVGIcon("Transfer_long_right.svg", 100, 100).getImage());
+	}
 
 	public jVidNodeComponent(JNodeFlowPane flow, FlowNode<T> node) {
 		super(flow);
 		this.node = node;
 		if (node.retrieveNodeContents() instanceof ControlInterface) {
 			System.out.println("has control interface");
-			hasControlInterface = true;
 			addNodePoint(new jVidControlNodePoint(flow, this));
 		}
 		if (node.retrieveNodeContents() instanceof AudioProcessor) {
 			System.out.println("has audio processor");
-			hasAudioProcessor = true;
 			AudioProcessor audioProc = (AudioProcessor) node.retrieveNodeContents();
 			for (int i = 0; i < audioProc.getAudioChannels(); i++)
 				addNodePoint(new jVidAudioNodePoint(flow, this, i + 1));
 		}
+		this.setComponentPopupMenu(createPopupMenu(flow));
+		this.setIcon(defaultIcons.get(getNodeType()));
+	}
+
+	@Override
+	public void setNodeType(NodeType type) {
+		super.setNodeType(type);
+		this.setIcon(defaultIcons.get(type));
 	}
 
 	public void preSave() {
@@ -52,8 +67,8 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		return desc;
 	}
 
-	private JMenu createPopupMenu(JNodeFlowPane ha) {
-		JMenu editMenu = new JMenu();
+	private JPopupMenu createPopupMenu(JNodeFlowPane ha) {
+		JPopupMenu editMenu = new JPopupMenu();
 
 		JMenuItem editDeleteSelected = new JMenuItem("Delete");
 		JMenuItem editSelectedProperties = new JMenuItem("Edit");
@@ -121,13 +136,11 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		return node;
 	}
 
-	private class jVidControlNodePoint extends JNodeComponent.NodePoint {
-
-		private JNodeComponent parent;
+	public final class jVidControlNodePoint extends JNodeComponent.NodePoint {
 
 		public jVidControlNodePoint(JNodeFlowPane flow, JNodeComponent parent) {
 			super(flow, parent);
-			this.parent = parent;
+			this.setNodeType(parent.getNodeType());
 			setColor(Color.GRAY);
 		}
 
@@ -161,11 +174,6 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		}
 
 		@Override
-		public NodeType getNodeType() {
-			return parent.getNodeType();
-		}
-
-		@Override
 		public void removeChildLinkage(JNodeComponent child) {
 
 		}
@@ -176,7 +184,7 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 	}
 
-	private class jVidAudioNodePoint extends JNodeComponent.NodePoint {
+	public class jVidAudioNodePoint extends JNodeComponent.NodePoint {
 		private int channel = 1;
 		private JNodeComponent parent;
 

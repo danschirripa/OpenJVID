@@ -13,6 +13,7 @@ import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.Type
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.egressors.LocalWindowEgressor;
 import com.javashell.video.egressors.NDI5Egressor;
+import com.javashell.video.egressors.PTZLocalWindowEgressor;
 import com.javashell.video.egressors.QOYStreamEgressor_V2;
 import com.javashell.video.egressors.RawAudioEgressor;
 
@@ -31,6 +32,31 @@ public class EgressNodeFactory {
 
 		prevNodeComp.setNodeName("Preview Frame");
 		prevNodeComp.setNodeComponentDescriptor(desc);
+
+		prev.open();
+
+		return prevNodeComp;
+	}
+
+	@TypeName(typeName = "PTZ Preview Frame", nodeType = NodeType.Receiver)
+	public static jVidNodeComponent<VideoProcessor> createPTZPreviewFrameEgress(
+			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
+		PTZLocalWindowEgressor prev = new PTZLocalWindowEgressor(resolution);
+		FlowNode<VideoProcessor> previewNode = new VideoFlowNode(prev, null, null);
+		jVidNodeComponent<VideoProcessor> prevNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, previewNode);
+		prevNodeComp.setNodeType(NodeType.Receiver);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"Preview Frame", resolution);
+
+		prevNodeComp.setNodeName("Preview Frame");
+		prevNodeComp.setNodeComponentDescriptor(desc);
+
+		for (var point : prevNodeComp.getNodePoints()) {
+			if (point instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
+				point.setNodeType(NodeType.Transmitter);
+			}
+		}
 
 		prev.open();
 

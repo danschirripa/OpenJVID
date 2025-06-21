@@ -46,11 +46,14 @@ public class jVidConfigurationParser {
 					final HashMap<UUID, MatrixDescriptor> unrealizedMatrices = new HashMap<UUID, MatrixDescriptor>();
 					final Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>> matrixCrosspoints = new Hashtable<UUID, Hashtable<UUID, HashSet<UUID>>>();
 
+					// Load a node graph from a given file
 					Scanner sc = new Scanner(fin);
 					sc.useDelimiter("\\n\\t:\\r");
 					while (sc.hasNext()) {
 						final String descriptor = sc.next();
 						final String[] values = descriptor.split("\n\t:");
+
+						// Check if this line is a LINKAGE description
 						if (values[0].equals("LINKAGE")) {
 							UUID originLink = UUID.fromString(values[1]);
 							HashSet<UUID> children = new HashSet<UUID>();
@@ -60,6 +63,7 @@ public class jVidConfigurationParser {
 							linkagesByUUID.put(originLink, children);
 							continue;
 						}
+						// Check if this line is a MATRIX description
 						if (values[0].equals("MATRIX")) {
 							UUID matrixID = UUID.fromString(values[1]);
 							Hashtable<UUID, HashSet<UUID>> crosspoints = new Hashtable<UUID, HashSet<UUID>>();
@@ -77,6 +81,8 @@ public class jVidConfigurationParser {
 							matrixCrosspoints.put(matrixID, crosspoints);
 							continue;
 						}
+						// If this line is neither a LINKAGE or MATRIX, it must just be an object
+						// definition
 						final UUID nodeID = UUID.fromString(values[0]);
 						final String contentClass = values[1];
 
@@ -85,12 +91,14 @@ public class jVidConfigurationParser {
 
 						final Object[] parameters = new Object[values.length - 3];
 
+						// Decode all the parameter objects
 						for (int i = 4; i < values.length; i++) {
 							final byte[] decoded64 = Base64.getDecoder().decode(values[i]);
 							final ByteArrayInputStream bin = new ByteArrayInputStream(decoded64);
 							final ObjectInputStream oin = new ObjectInputStream(bin);
 							parameters[i - 4] = oin.readObject();
 						}
+						// If this object is a type of Matrix, load appropriately
 						if (contentClass.startsWith("Matrix")) {
 							final MatrixDescriptor md = new MatrixDescriptor();
 							md.parameters = parameters;
@@ -100,8 +108,11 @@ public class jVidConfigurationParser {
 							unrealizedMatrices.put(nodeID, md);
 							continue;
 						}
+						// Insert the flowPane parameter as the last index
 						parameters[parameters.length - 1] = flowPane;
+						// Load the associated callback method for creation
 						Method creationMethod = AddComponentDialog.callBackMethods.get(contentClass);
+						// Create the jVidNodeComponent
 						SwingUtilities.invokeAndWait(new Runnable() {
 							public void run() {
 								try {
@@ -110,6 +121,7 @@ public class jVidConfigurationParser {
 									vidComp.setLocation(x, y);
 									compsByUUID.put(nodeID, vidComp);
 									flowPane.add(vidComp);
+									System.out.println(vidComp.getNodeName());
 								} catch (Exception e) {
 									e.printStackTrace();
 								}

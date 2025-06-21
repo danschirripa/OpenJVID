@@ -18,6 +18,7 @@ import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.lua.LuaManager;
 import com.javashell.openjvid.lua.swing.LuaComponent;
 import com.javashell.openjvid.lua.utilities.LuajVidNodeComponent;
+import com.javashell.openjvid.ui.IconManager;
 import com.javashell.openjvid.ui.components.LuaCodeEditorFrame;
 import com.javashell.video.VideoProcessor;
 
@@ -38,6 +39,7 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 		this.getNode().retrieveNodeContents().open();
 		setComponentPopupMenu(generatePopupMenu());
 		startScript();
+		setIcon(IconManager.getSVGIcon("terminal.svg", 100, 100).getImage());
 	}
 
 	public jVidScriptedComponent(String script, JNodeFlowPane flow) {
@@ -47,6 +49,7 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 		setComponentPopupMenu(generatePopupMenu());
 		this.script = script;
 		startScript();
+		setIcon(IconManager.getSVGIcon("terminal", 100, 100).getImage());
 	}
 
 	public BufferedImage processFrame(BufferedImage frame) {
