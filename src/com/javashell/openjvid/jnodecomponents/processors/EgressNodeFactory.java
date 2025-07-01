@@ -53,7 +53,7 @@ public class EgressNodeFactory {
 		prevNodeComp.setNodeComponentDescriptor(desc);
 
 		for (var point : prevNodeComp.getNodePoints()) {
-			if (point instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
+			if (point instanceof jVidNodeComponent.jVidControlNodePoint) {
 				point.setNodeType(NodeType.Transmitter);
 			}
 		}

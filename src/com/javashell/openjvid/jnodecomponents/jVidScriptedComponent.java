@@ -2,7 +2,6 @@ package com.javashell.openjvid.jnodecomponents;
 
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.event.WindowStateListener;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JFrame;
@@ -25,7 +24,11 @@ import com.javashell.video.VideoProcessor;
 public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 	private static final long serialVersionUID = -2151504432881312600L;
 
-	private String script = "";
+	private String script = "--[[\n" + " Pack varargs into more standard format, extract this component\n" + "]]--\n"
+			+ "args = table.pack(...);\n" + "\n" + "-- \n" + "Node = args[1];\n" + "NodeName = Node:GetNodeName();\n"
+			+ "\n" + "function FrameCallback(Graphics)\n" + "\n" + "end;\n" + "\n"
+			+ "function ControlCallback(Controls)\n" + "\n" + "end;\n" + "\n"
+			+ "Node:SetFrameCallback(FrameCallback);\n" + "Node:SetControlCallback(ControlCallback);";
 	private boolean isEditing = false;
 
 	private LuajVidNodeComponent luaComp;
@@ -33,11 +36,14 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 	private LuaObject processCallback = null, controlCallback = null;
 	private LuaInterpreter interp;
 
+	private JNodeFlowPane flowPane;
+
 	public jVidScriptedComponent(JNodeFlowPane flow) {
 		super(flow, new LuaFlowNode());
 		((LuaFlowNode) this.getNode()).setScriptedComponent(this);
 		this.getNode().retrieveNodeContents().open();
 		setComponentPopupMenu(generatePopupMenu());
+		this.flowPane = flow;
 		startScript();
 		setIcon(IconManager.getSVGIcon("terminal.svg", 100, 100).getImage());
 	}
@@ -49,7 +55,7 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 		setComponentPopupMenu(generatePopupMenu());
 		this.script = script;
 		startScript();
-		setIcon(IconManager.getSVGIcon("terminal", 100, 100).getImage());
+		setIcon(IconManager.getSVGIcon("terminal.svg", 100, 100).getImage());
 	}
 
 	public BufferedImage processFrame(BufferedImage frame) {
@@ -66,7 +72,7 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 
 	public void processControl(Object obj) {
 		if (controlCallback != null) {
-			controlCallback.call(interp, null);
+			controlCallback.call(interp, Lua.newLuaObject(obj));
 		}
 	}
 
@@ -88,7 +94,6 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 
 					@Override
 					public void windowActivated(WindowEvent arg0) {
-						// TODO Auto-generated method stub
 					}
 
 					@Override
@@ -101,8 +106,6 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 
 					@Override
 					public void windowClosing(WindowEvent arg0) {
-						// TODO Auto-generated method stub
-
 					}
 
 					@Override
@@ -111,20 +114,14 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 
 					@Override
 					public void windowDeiconified(WindowEvent arg0) {
-						// TODO Auto-generated method stub
-
 					}
 
 					@Override
 					public void windowIconified(WindowEvent arg0) {
-						// TODO Auto-generated method stub
-
 					}
 
 					@Override
 					public void windowOpened(WindowEvent arg0) {
-						// TODO Auto-generated method stub
-
 					}
 
 				});
@@ -152,7 +149,7 @@ public class jVidScriptedComponent extends jVidNodeComponent<VideoProcessor> {
 			LuaManager.injectAllHooks(factory);
 			factory.compile();
 			interp = factory.build();
-			luaComp = new LuajVidNodeComponent(interp, this);
+			luaComp = new LuajVidNodeComponent(interp, this, flowPane);
 			interp.execute(luaComp);
 		} catch (Exception e) {
 			e.printStackTrace();

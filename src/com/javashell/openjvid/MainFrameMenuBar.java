@@ -9,11 +9,17 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
+import javax.swing.border.BevelBorder;
 
+import com.javashell.flow.FlowController;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
@@ -36,6 +42,27 @@ public class MainFrameMenuBar extends JMenuBar {
 		JMenu fileMenu = new JMenu("File");
 		JMenu editMenu = new JMenu("Edit");
 		JMenu toolsMenu = new JMenu("Tools");
+
+		JMenuItem frameRate = new JMenuItem();
+		Thread frameRatePainter = new Thread(new Runnable() {
+			public void run() {
+				while (flowPane.isVisible()) {
+					try {
+						Thread.sleep(250);
+					} catch (Exception e) {
+						frameRate.setText("[n/a fps]");
+						return;
+					}
+					frameRate.setText(FlowController.getAverageInternalFrameRate() + " fps    |    "
+							+ FlowController.getAverageFrameDelta() + "ns delta");
+				}
+			}
+		});
+		frameRatePainter.start();
+
+		frameRate.setText("[n/a fps]");
+		frameRate.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+		frameRate.setBorderPainted(true);
 
 		// File Menu item setup
 		JMenuItem fileSave = new JMenuItem("Save");
@@ -97,6 +124,8 @@ public class MainFrameMenuBar extends JMenuBar {
 		add(fileMenu);
 		add(editMenu);
 		add(toolsMenu);
+		add(Box.createHorizontalGlue());
+		add(frameRate);
 	}
 
 	private void loadRecents() {

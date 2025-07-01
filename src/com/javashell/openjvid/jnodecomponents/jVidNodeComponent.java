@@ -33,11 +33,11 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 	}
 
 	public jVidNodeComponent(JNodeFlowPane flow, FlowNode<T> node) {
-		super(flow);
+		super(flow, FlowNode.class);
 		this.node = node;
 		if (node.retrieveNodeContents() instanceof ControlInterface) {
 			System.out.println("has control interface");
-			addNodePoint(new jVidControlNodePoint(flow, this));
+			addNodePoint(new jVidControlNodePoint(flow, this, node));
 		}
 		if (node.retrieveNodeContents() instanceof AudioProcessor) {
 			System.out.println("has audio processor");
@@ -136,18 +136,27 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		return node;
 	}
 
-	public final class jVidControlNodePoint extends JNodeComponent.NodePoint {
+	public static class jVidControlNodePoint extends JNodeComponent.NodePoint {
+		private FlowNode<?> node;
 
-		public jVidControlNodePoint(JNodeFlowPane flow, JNodeComponent parent) {
-			super(flow, parent);
+		public jVidControlNodePoint(JNodeFlowPane flow, JNodeComponent parent, FlowNode<?> node) {
+			super(flow, parent, jVidControlNodePoint.class);
 			this.setNodeType(parent.getNodeType());
+			this.node = node;
+			setColor(Color.GRAY);
+		}
+
+		public jVidControlNodePoint(JNodeFlowPane flow, JNodeComponent parent, Class<?> objType, FlowNode<?> node) {
+			super(flow, parent, objType);
+			this.setNodeType(parent.getNodeType());
+			this.node = node;
 			setColor(Color.GRAY);
 		}
 
 		@Override
 		public void addOriginLinkage(JNodeComponent origin, boolean cascade) throws IncorrectLinkageException {
-			if (origin instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
-				jVidNodeComponent<?>.jVidControlNodePoint comp = (jVidNodeComponent<?>.jVidControlNodePoint) origin;
+			if (origin instanceof jVidNodeComponent.jVidControlNodePoint) {
+				jVidNodeComponent.jVidControlNodePoint comp = (jVidNodeComponent.jVidControlNodePoint) origin;
 				Object nodeContents = ((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
 						.retrieveNodeContents();
 				if (nodeContents instanceof ControlInterface) {
@@ -159,8 +168,8 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 		@Override
 		public void addChildLinkage(JNodeComponent child, boolean cascade) throws IncorrectLinkageException {
-			if (child instanceof jVidNodeComponent<?>.jVidControlNodePoint) {
-				jVidNodeComponent<?>.jVidControlNodePoint comp = (jVidNodeComponent<?>.jVidControlNodePoint) child;
+			if (child instanceof jVidNodeComponent.jVidControlNodePoint) {
+				jVidNodeComponent.jVidControlNodePoint comp = (jVidNodeComponent.jVidControlNodePoint) child;
 				if (((jVidNodeComponent<?>) comp.getParentNodeComponent()).getNode()
 						.retrieveNodeContents() instanceof ControlInterface) {
 					ControlInterface thisInterface = (ControlInterface) node.retrieveNodeContents();
@@ -182,6 +191,10 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		public void removeOriginLinkage(JNodeComponent origin) {
 		}
 
+		public FlowNode<?> getNode() {
+			return node;
+		}
+
 	}
 
 	public class jVidAudioNodePoint extends JNodeComponent.NodePoint {
@@ -189,7 +202,7 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		private JNodeComponent parent;
 
 		public jVidAudioNodePoint(JNodeFlowPane flow, JNodeComponent parent, int channel) {
-			super(flow, parent);
+			super(flow, parent, jVidAudioNodePoint.class);
 			setColor(Color.CYAN);
 			this.channel = channel;
 			this.parent = parent;
