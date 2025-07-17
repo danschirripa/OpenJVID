@@ -16,6 +16,7 @@ import com.javashell.video.egressors.NDI5Egressor;
 import com.javashell.video.egressors.PTZLocalWindowEgressor;
 import com.javashell.video.egressors.QOYStreamEgressor_V2;
 import com.javashell.video.egressors.RawAudioEgressor;
+import com.javashell.video.egressors.experimental.FFMPEGStreamEgressor;
 
 public class EgressNodeFactory {
 
@@ -99,6 +100,27 @@ public class EgressNodeFactory {
 		qoyv.open();
 
 		return qoyvNodeComp;
+	}
+
+	@TypeName(typeName = "FFmpeg Egressor", nodeType = NodeType.Receiver)
+	public static jVidNodeComponent<VideoProcessor> createFFMPEGStreamEgressor(
+			@Label(label = "Resolution") Dimension resolution, @Label(label = "Multicast Address") String mcastAddress,
+			@Label(label = "Codec Type") FFMPEGStreamEgressor.VideoCodec codec,
+			@Label(label = "Codec Name") String codecName, JNodeFlowPane flowPane) {
+		FFMPEGStreamEgressor ffout = new FFMPEGStreamEgressor(resolution, mcastAddress, codec, codecName);
+		FlowNode<VideoProcessor> ffoutNode = new VideoFlowNode(ffout, null, null);
+		jVidNodeComponent<VideoProcessor> ffoutComp = new jVidNodeComponent<VideoProcessor>(flowPane, ffoutNode);
+		ffoutComp.setNodeType(NodeType.Receiver);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"FFmpeg Egressor", resolution, mcastAddress, codec, codecName);
+
+		ffoutComp.setNodeName(mcastAddress);
+		ffoutComp.setNodeComponentDescriptor(desc);
+
+		ffout.open();
+
+		return ffoutComp;
 	}
 
 	@TypeName(typeName = "Raw Audio Egressor", nodeType = NodeType.Receiver)

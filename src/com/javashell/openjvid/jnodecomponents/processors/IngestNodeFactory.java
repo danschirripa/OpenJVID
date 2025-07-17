@@ -17,6 +17,7 @@ import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.openjvid.ui.components.input.JackInputComponent.JackInputClient;
+import com.javashell.openjvid.ui.components.input.gstreamer.VideoInputDeviceInputComponent;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.camera.Camera;
 import com.javashell.video.camera.extras.AmcrestCameraInterface;
@@ -115,6 +116,15 @@ public class IngestNodeFactory {
 		gst.open();
 
 		return gstNodeComp;
+	}
+
+	@TypeName(typeName = "GStreamer Ingest Basic", nodeType = NodeType.Transmitter)
+	public static jVidNodeComponent<VideoProcessor> createGstreamerIngest2(
+			@Label(label = "Resolution") Dimension resolution,
+			@Label(label = "GStreamer String") VideoInputDeviceInputComponent.VideoInputClient client,
+			JNodeFlowPane flowPane) {
+
+		return null;
 	}
 
 	@TypeName(typeName = "FFmpeg Ingest (URL)", nodeType = NodeType.Transmitter)

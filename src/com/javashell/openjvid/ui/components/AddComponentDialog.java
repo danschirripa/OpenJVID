@@ -16,9 +16,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -41,6 +38,7 @@ import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.openjvid.peripheral.PeripheralDescriptor;
 import com.javashell.openjvid.ui.components.input.DimensionInputComponent;
+import com.javashell.openjvid.ui.components.input.FFMPEGVideoCodecInputComponent;
 import com.javashell.openjvid.ui.components.input.FileInputComponent;
 import com.javashell.openjvid.ui.components.input.FloatInputComponent;
 import com.javashell.openjvid.ui.components.input.IntegerInputComponent;
@@ -48,7 +46,9 @@ import com.javashell.openjvid.ui.components.input.JackInputComponent;
 import com.javashell.openjvid.ui.components.input.PeripheralInputComponent;
 import com.javashell.openjvid.ui.components.input.StringInputComponent;
 import com.javashell.openjvid.ui.components.input.URLInputComponent;
+import com.javashell.openjvid.ui.components.input.gstreamer.VideoInputDeviceInputComponent;
 import com.javashell.video.VideoProcessor;
+import com.javashell.video.egressors.experimental.FFMPEGStreamEgressor;
 
 public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
@@ -292,6 +292,29 @@ public class AddComponentDialog extends JDialog {
 
 					public void actionPerformed(ActionEvent e) {
 						parameterValues.put(p, inputComponent.getString());
+					}
+				};
+			}
+
+			if (param.isInstance(new VideoInputDeviceInputComponent.VideoInputClient(""))) {
+				VideoInputDeviceInputComponent inputComponent = new VideoInputDeviceInputComponent(label);
+				inputPanel.add(inputComponent);
+				paramActions[index] = new AbstractAction() {
+					private static final long serialVersionUID = -2839715408638790225L;
+
+					public void actionPerformed(ActionEvent e) {
+						parameterValues.put(p, inputComponent.getString());
+					}
+				};
+			}
+			if (param.isAssignableFrom(FFMPEGStreamEgressor.VideoCodec.class)) {
+				FFMPEGVideoCodecInputComponent inputComponent = new FFMPEGVideoCodecInputComponent(label);
+				inputPanel.add(inputComponent);
+				paramActions[index] = new AbstractAction() {
+					private static final long serialVersionUID = -7088737180672585751L;
+
+					public void actionPerformed(ActionEvent e) {
+						parameterValues.put(p, inputComponent.getCodec());
 					}
 				};
 			}
