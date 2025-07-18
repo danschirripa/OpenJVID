@@ -41,8 +41,10 @@ import com.javashell.openjvid.ui.components.input.DimensionInputComponent;
 import com.javashell.openjvid.ui.components.input.FFMPEGVideoCodecInputComponent;
 import com.javashell.openjvid.ui.components.input.FileInputComponent;
 import com.javashell.openjvid.ui.components.input.FloatInputComponent;
+import com.javashell.openjvid.ui.components.input.InputComponent;
 import com.javashell.openjvid.ui.components.input.IntegerInputComponent;
 import com.javashell.openjvid.ui.components.input.JackInputComponent;
+import com.javashell.openjvid.ui.components.input.JackInputComponent.JackInputClient;
 import com.javashell.openjvid.ui.components.input.PeripheralInputComponent;
 import com.javashell.openjvid.ui.components.input.StringInputComponent;
 import com.javashell.openjvid.ui.components.input.URLInputComponent;
@@ -56,6 +58,8 @@ public class AddComponentDialog extends JDialog {
 	public final static String[] componentTypes, shownComponentTypes;
 
 	public final static HashMap<String, Method> callBackMethods;
+
+	public final static HashMap<Class<?>, Class<? extends InputComponent<?>>> inputComponents;
 
 	static {
 		callBackMethods = new HashMap<String, Method>();
@@ -114,6 +118,17 @@ public class AddComponentDialog extends JDialog {
 		componentTypes = Arrays.copyOfRange(_componentTypes, 0, ctIndex);
 		shownComponentTypes = Arrays.copyOfRange(_shownComponentTypes, 0, sctIndex);
 		Arrays.sort(shownComponentTypes);
+
+		inputComponents = new HashMap<Class<?>, Class<? extends InputComponent<?>>>();
+		inputComponents.put(String.class, StringInputComponent.class);
+		inputComponents.put(Dimension.class, DimensionInputComponent.class);
+		inputComponents.put(URL.class, URLInputComponent.class);
+		inputComponents.put(int.class, IntegerInputComponent.class);
+		inputComponents.put(File.class, FileInputComponent.class);
+		inputComponents.put(PeripheralDescriptor.class, PeripheralInputComponent.class);
+		inputComponents.put(float.class, FloatInputComponent.class);
+		inputComponents.put(JackInputClient.class, JackInputComponent.class);
+		inputComponents.put(FFMPEGStreamEgressor.VideoCodec.class, FFMPEGVideoCodecInputComponent.class);
 	}
 
 	private static JPanel currentInputPanel;
@@ -186,138 +201,25 @@ public class AddComponentDialog extends JDialog {
 
 			// Parse parameter type and generate proper input panel
 
-			if (param.isInstance(new String())) {
-				StringInputComponent inputComponent = new StringInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-
-					private static final long serialVersionUID = 523150373601699354L;
-
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getString());
-					}
-
-				};
-			}
-
-			try {
-				if (param.isInstance(new URL("https://google.com"))) {
-					URLInputComponent inputComponent = new URLInputComponent(label);
-					inputPanel.add(inputComponent);
+			if (inputComponents.containsKey(param)) {
+				try {
+					var inputComponent = (InputComponent<?>) inputComponents.get(param).getConstructors()[0]
+							.newInstance();
+					inputPanel.add(inputComponent.getPanel(label));
 					paramActions[index] = new AbstractAction() {
-
-						private static final long serialVersionUID = 460808087052007952L;
+						private static final long serialVersionUID = -9127319111187712128L;
 
 						public void actionPerformed(ActionEvent e) {
-							try {
-								parameterValues.put(p, inputComponent.getURL());
-							} catch (Exception e1) {
-								e1.printStackTrace();
-							}
+							parameterValues.put(p, inputComponent.getParameter());
 						}
 					};
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 
-			if (param.isAssignableFrom(int.class)) {
-				IntegerInputComponent inputComponent = new IntegerInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-
-					private static final long serialVersionUID = 8781780707545614243L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getInt());
-					}
-				};
-			}
-
-			if (param.isInstance(new Dimension())) {
-				DimensionInputComponent inputComponent = new DimensionInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-
-					private static final long serialVersionUID = -4221662606504890055L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getDimension());
-					}
-				};
-			}
-
-			if (param.isInstance(new File(""))) {
-				FileInputComponent inputComponent = new FileInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-					private static final long serialVersionUID = -2839715408638790225L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getFile());
-					}
-				};
-			}
-
-			if (param.isInstance(new PeripheralDescriptor())) {
-				PeripheralInputComponent inputComponent = new PeripheralInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-					private static final long serialVersionUID = -2839715408638790225L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getPeripheralDescriptor());
-					}
-				};
-			}
-
-			if (param.isAssignableFrom(float.class)) {
-				FloatInputComponent inputComponent = new FloatInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-					private static final long serialVersionUID = -2839715408638790225L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getFloat());
-					}
-				};
-			}
-
-			if (param.isInstance(new JackInputComponent.JackInputClient(""))) {
-				JackInputComponent inputComponent = new JackInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-					private static final long serialVersionUID = -2839715408638790225L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getString());
-					}
-				};
-			}
-
-			if (param.isInstance(new VideoInputDeviceInputComponent.VideoInputClient(""))) {
-				VideoInputDeviceInputComponent inputComponent = new VideoInputDeviceInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-					private static final long serialVersionUID = -2839715408638790225L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getString());
-					}
-				};
-			}
-			if (param.isAssignableFrom(FFMPEGStreamEgressor.VideoCodec.class)) {
-				FFMPEGVideoCodecInputComponent inputComponent = new FFMPEGVideoCodecInputComponent(label);
-				inputPanel.add(inputComponent);
-				paramActions[index] = new AbstractAction() {
-					private static final long serialVersionUID = -7088737180672585751L;
-
-					public void actionPerformed(ActionEvent e) {
-						parameterValues.put(p, inputComponent.getCodec());
-					}
-				};
-			}
+			// TODO if (param.isInstance(new
+			// VideoInputDeviceInputComponent.VideoInputClient(""))) {
 			index++;
 		}
 

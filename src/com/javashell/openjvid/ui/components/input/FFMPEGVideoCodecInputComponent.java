@@ -10,25 +10,28 @@ import javax.swing.JPanel;
 
 import com.javashell.video.egressors.experimental.FFMPEGStreamEgressor;
 
-public class FFMPEGVideoCodecInputComponent extends JPanel {
-	final JComboBox<FFMPEGStreamEgressor.VideoCodec> ffmpegCodecs;
-	final JLabel inputLabel;
+public class FFMPEGVideoCodecInputComponent extends InputComponent<FFMPEGStreamEgressor.VideoCodec> {
+	private JComboBox<FFMPEGStreamEgressor.VideoCodec> ffmpegCodecs;
+	private JLabel inputLabel;
 
-	public FFMPEGVideoCodecInputComponent(String label) {
+	public JPanel getPanel(String label) {
+		JPanel panel = new JPanel();
 		inputLabel = new JLabel(label);
 
 		ffmpegCodecs = new JComboBox<FFMPEGStreamEgressor.VideoCodec>(FFMPEGStreamEgressor.VideoCodec.values());
 
-		setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+		panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-		setLayout(new BorderLayout());
+		panel.setLayout(new BorderLayout());
 
-		add(inputLabel, BorderLayout.WEST);
-		add(ffmpegCodecs, BorderLayout.EAST);
-		setToolTipText(label);
+		panel.add(inputLabel, BorderLayout.WEST);
+		panel.add(ffmpegCodecs, BorderLayout.EAST);
+		panel.setToolTipText(label);
+
+		return panel;
 	}
 
-	public FFMPEGStreamEgressor.VideoCodec getCodec() {
+	public FFMPEGStreamEgressor.VideoCodec getParameter() {
 		return (FFMPEGStreamEgressor.VideoCodec) ffmpegCodecs.getSelectedItem();
 	}
 

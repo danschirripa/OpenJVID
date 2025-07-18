@@ -10,11 +10,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.text.NumberFormatter;
 
-public class IntegerInputComponent extends JPanel {
-	final JFormattedTextField intInput;
-	final JLabel inputLabel;
+public class IntegerInputComponent extends InputComponent<Integer> {
+	private JFormattedTextField intInput;
+	private JLabel inputLabel;
 
-	public IntegerInputComponent(String label) {
+	public JPanel getPanel(String label) {
+		JPanel panel = new JPanel();
 		inputLabel = new JLabel(label);
 
 		NumberFormat format = NumberFormat.getInstance();
@@ -30,16 +31,17 @@ public class IntegerInputComponent extends JPanel {
 		intInput = new JFormattedTextField(formatter);
 		intInput.setColumns(15);
 
-		setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+		panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-		setLayout(new BorderLayout());
+		panel.setLayout(new BorderLayout());
 
-		add(inputLabel, BorderLayout.WEST);
-		add(intInput, BorderLayout.EAST);
-		setToolTipText(label);
+		panel.add(inputLabel, BorderLayout.WEST);
+		panel.add(intInput, BorderLayout.EAST);
+		panel.setToolTipText(label);
+		return panel;
 	}
 
-	public int getInt() {
+	public Integer getParameter() {
 		return (int) intInput.getValue();
 	}
 }

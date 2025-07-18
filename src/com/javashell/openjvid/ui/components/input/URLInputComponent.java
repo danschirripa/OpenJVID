@@ -10,28 +10,36 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class URLInputComponent extends JPanel{
-	
-	private static final long serialVersionUID = 2500697982517696041L;
-	
-	final JTextField urlInput;
-	final JLabel inputLabel;
+public class URLInputComponent extends InputComponent<URL> {
 
-	public URLInputComponent(String label) {
+	private static final long serialVersionUID = 2500697982517696041L;
+
+	private JTextField urlInput;
+	private JLabel inputLabel;
+
+	public JPanel getPanel(String label) {
+		JPanel panel = new JPanel();
 		inputLabel = new JLabel(label);
 		urlInput = new JTextField();
 		urlInput.setColumns(15);
 
-		setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+		panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-		setLayout(new BorderLayout());
+		panel.setLayout(new BorderLayout());
 
-		add(inputLabel, BorderLayout.WEST);
-		add(urlInput, BorderLayout.EAST);
-		setToolTipText(label);
+		panel.add(inputLabel, BorderLayout.WEST);
+		panel.add(urlInput, BorderLayout.EAST);
+		panel.setToolTipText(label);
+		return panel;
 	}
 
-	public URL getURL() throws MalformedURLException {
-		return new URL(urlInput.getText());
+	@Override
+	public URL getParameter() {
+		try {
+			return new URL(urlInput.getText());
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

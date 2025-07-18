@@ -10,28 +10,30 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class FileInputComponent extends JPanel {
+public class FileInputComponent extends InputComponent<File> {
 	private JTextField pathInputField;
 	private JLabel inputLabel;
-	
-	public FileInputComponent(String label) {
+
+	public JPanel getPanel(String label) {
+		JPanel panel = new JPanel();
 		pathInputField = new JTextField();
 		inputLabel = new JLabel(label);
 
-		setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+		panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-		setLayout(new BorderLayout());
-		add(inputLabel, BorderLayout.NORTH);
+		panel.setLayout(new BorderLayout());
+		panel.add(inputLabel, BorderLayout.NORTH);
 
 		JPanel inputPanel = new JPanel();
 		BoxLayout layout = new BoxLayout(inputPanel, BoxLayout.LINE_AXIS);
 		inputPanel.setLayout(layout);
 		inputPanel.add(pathInputField);
-		add(inputPanel, BorderLayout.CENTER);
-		setToolTipText(label);
+		panel.add(inputPanel, BorderLayout.CENTER);
+		panel.setToolTipText(label);
+		return panel;
 	}
-	
-	public File getFile() {
+
+	public File getParameter() {
 		return new File(pathInputField.getText());
 	}
 }

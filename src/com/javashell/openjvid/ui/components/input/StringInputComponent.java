@@ -8,27 +8,30 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-public class StringInputComponent extends JPanel {
+public class StringInputComponent extends InputComponent<String> {
 	private static final long serialVersionUID = 1046830625005382768L;
 
-	final JTextField stringInput;
-	final JLabel inputLabel;
+	private JTextField stringInput;
 
-	public StringInputComponent(String label) {
-		inputLabel = new JLabel(label);
+	public JPanel getPanel(String label) {
+		JPanel panel = new JPanel();
+		JLabel inputLabel = new JLabel(label);
 		stringInput = new JTextField();
 		stringInput.setColumns(15);
 
-		setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+		panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-		setLayout(new BorderLayout());
+		panel.setLayout(new BorderLayout());
 
-		add(inputLabel, BorderLayout.WEST);
-		add(stringInput, BorderLayout.EAST);
-		setToolTipText(label);
+		panel.add(inputLabel, BorderLayout.WEST);
+		panel.add(stringInput, BorderLayout.EAST);
+		panel.setToolTipText(label);
+
+		return panel;
 	}
 
-	public String getString() {
+	@Override
+	public String getParameter() {
 		return stringInput.getText();
 	}
 

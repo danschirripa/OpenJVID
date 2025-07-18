@@ -11,12 +11,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.text.NumberFormatter;
 
-public class FloatInputComponent extends JPanel {
-	final JFormattedTextField floatInput;
-	final JLabel inputLabel;
-	final NumberFormatter formatter;
+public class FloatInputComponent extends InputComponent<Float> {
+	private JFormattedTextField floatInput;
+	private JLabel inputLabel;
+	private NumberFormatter formatter;
 
-	public FloatInputComponent(String label) {
+	public JPanel getPanel(String label) {
+		JPanel panel = new JPanel();
 		inputLabel = new JLabel(label);
 
 		DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance();
@@ -33,16 +34,17 @@ public class FloatInputComponent extends JPanel {
 		floatInput = new JFormattedTextField(formatter);
 		floatInput.setColumns(15);
 
-		setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+		panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-		setLayout(new BorderLayout());
+		panel.setLayout(new BorderLayout());
 
-		add(inputLabel, BorderLayout.WEST);
-		add(floatInput, BorderLayout.EAST);
-		setToolTipText(label);
+		panel.add(inputLabel, BorderLayout.WEST);
+		panel.add(floatInput, BorderLayout.EAST);
+		panel.setToolTipText(label);
+		return panel;
 	}
 
-	public float getFloat() {
+	public Float getParameter() {
 		return (float) floatInput.getValue();
 	}
 }
