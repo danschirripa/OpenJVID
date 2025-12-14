@@ -18,6 +18,7 @@ import com.javashell.video.digestors.MatrixDigestor;
 public class jVidMatrixNodeComponent extends jVidNodeComponent<VideoProcessor> {
 	private static final long serialVersionUID = 3800957082229059177L;
 	MatrixDigestorCrosspointDialog crosspointDialog;
+	MatrixDigestor digestor;
 
 	public jVidMatrixNodeComponent(JNodeFlowPane flow, MatrixDigestor node) {
 		super(flow, node);

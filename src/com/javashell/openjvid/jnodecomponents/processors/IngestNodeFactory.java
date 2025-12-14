@@ -130,12 +130,13 @@ public class IngestNodeFactory {
 	@TypeName(typeName = "FFmpeg Ingest (URL)", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "URL") URL videoInput,
-			JNodeFlowPane flowPane) {
+			@Label(label = "Name") String name, JNodeFlowPane flowPane) {
 		FFMPEGIngestor ffmpeg = new FFMPEGIngestor(resolution, videoInput);
 		FlowNode<VideoProcessor> ffmpegNode = new VideoFlowNode(ffmpeg, null, null);
 		jVidNodeComponent<VideoProcessor> ffmpegNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ffmpegNode);
 		FlowController.registerFlowNode(ffmpegNode);
 		ffmpegNodeComp.setNodeType(NodeType.Transmitter);
+		ffmpegNodeComp.setNodeName(name);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
 				"FFmpeg Ingest (URL)", resolution, videoInput);

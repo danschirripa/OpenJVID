@@ -1,7 +1,8 @@
 package com.javashell.openjvid.ui.components;
 
 import java.awt.Color;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -117,7 +118,13 @@ public class MatrixDigestorCrosspointDialog extends JDialog {
 		System.out.println("Total sources " + numSources);
 		System.out.println("Total sinks " + numSinks);
 
-		GridLayout layout = new GridLayout(numSources + 1, numSinks + 1);
+		GridBagLayout layout = new GridBagLayout();
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
+		c.weightx = 1;
+		c.weighty = 1;
+		c.gridx = 1;
+		c.gridy = 0;
 		JPanel crossPointPanel = new JPanel();
 		crossPointPanel.setLayout(layout);
 
@@ -125,41 +132,52 @@ public class MatrixDigestorCrosspointDialog extends JDialog {
 			JLabel sinkLabel = new JLabel(sink.getNodeName());
 			sinkLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 			System.out.println("Generated sink label");
-			crossPointPanel.add(sinkLabel);
+			crossPointPanel.add(sinkLabel, c);
+			c.gridx++;
 		}
+		c.gridx = 0;
+		c.gridy = 1;
 
 		for (var source : sources) {
 			JLabel sourceLabel = new JLabel(source.getNodeName());
-			crossPointPanel.add(sourceLabel);
+			crossPointPanel.add(sourceLabel, c);
+			c.gridx++;
 			for (var sink : sinks) {
 				JButton crosspointButton = createCrosspointButton(source, sink);
 				if (matrix.matrix.get(source.getNode()) != null
 						&& matrix.matrix.get(source.getNode()).contains(sink.getNode()))
 					crosspointButton.setSelected(true);
-				crossPointPanel.add(crosspointButton);
+				crossPointPanel.add(crosspointButton, c);
+				c.gridx++;
 			}
 			for (var sink : transceivers) {
 				JButton crosspointButton = createCrosspointButton(source, sink);
 				if (matrix.matrix.get(source.getNode()) != null
 						&& matrix.matrix.get(source.getNode()).contains(sink.getNode()))
 					crosspointButton.setSelected(true);
-				crossPointPanel.add(crosspointButton);
+				crossPointPanel.add(crosspointButton, c);
+				c.gridx++;
 			}
+			c.gridy++;
+			c.gridx = 0;
 		}
 
 		for (var source : transceivers) {
 			JLabel sourceLabel = new JLabel(source.getNodeName());
-			crossPointPanel.add(sourceLabel);
+			crossPointPanel.add(sourceLabel, c);
+			c.gridx++;
 			for (var sink : sinks) {
 				JButton crosspointButton = createCrosspointButton(source, sink);
 				if (matrix.matrix.get(source.getNode()) != null
 						&& matrix.matrix.get(source.getNode()).contains(sink.getNode()))
 					crosspointButton.setSelected(true);
-				crossPointPanel.add(crosspointButton);
+				crossPointPanel.add(crosspointButton, c);
+				c.gridx++;
 			}
 		}
 
 		setSize(500, 500);
+		crossPointPanel.setSize(500, 500);
 		add(crossPointPanel);
 		lastCrosspointPanel = crossPointPanel;
 		setVisible(true);
@@ -178,15 +196,16 @@ public class MatrixDigestorCrosspointDialog extends JDialog {
 		JButton crosspointButton = new JButton();
 		crosspointButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Crosspoint pressed");
 				if (crosspointButton.isSelected()) {
 					crosspointButton.setSelected(false);
 					matrix.breakCrossPoint(source.getNode(), sink.getNode());
 					crosspoints.get(source).remove(sink);
+					System.out.println("Removed crosspoint " + source.getNodeName() + " : " + sink.getNodeName());
 				} else {
 					crosspointButton.setSelected(true);
 					matrix.createCrossPoint(source.getNode(), sink.getNode());
 					crosspoints.get(source).add(sink);
+					System.out.println("Added crosspoint " + source.getNodeName() + " : " + sink.getNodeName());
 				}
 
 			}
