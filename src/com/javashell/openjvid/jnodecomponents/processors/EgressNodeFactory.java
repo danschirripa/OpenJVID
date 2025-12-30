@@ -22,16 +22,17 @@ public class EgressNodeFactory {
 
 	@TypeName(typeName = "Preview Frame", nodeType = NodeType.Receiver)
 	public static jVidNodeComponent<VideoProcessor> createPreviewFrameEgress(
-			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
+			@Label(label = "Resolution") Dimension resolution, @Label(label = "Name") String name,
+			JNodeFlowPane flowPane) {
 		LocalWindowEgressor prev = new LocalWindowEgressor(resolution);
 		FlowNode<VideoProcessor> previewNode = new VideoFlowNode(prev, null, null);
 		jVidNodeComponent<VideoProcessor> prevNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, previewNode);
 		prevNodeComp.setNodeType(NodeType.Receiver);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
-				"Preview Frame", resolution);
+				"Preview Frame", resolution, name);
 
-		prevNodeComp.setNodeName("Preview Frame");
+		prevNodeComp.setNodeName(name);
 		prevNodeComp.setNodeComponentDescriptor(desc);
 
 		prev.open();

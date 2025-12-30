@@ -4,9 +4,12 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
 import java.util.HashMap;
 
+import javax.swing.JColorChooser;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import com.javashell.audio.AudioProcessor;
@@ -70,10 +73,21 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 	private JPopupMenu createPopupMenu(JNodeFlowPane ha) {
 		JPopupMenu editMenu = new JPopupMenu();
 
+		var thisNode = this;
+
 		JMenuItem editDeleteSelected = new JMenuItem("Delete");
 		JMenuItem editSelectedProperties = new JMenuItem("Edit");
+		JPanel editColorPanel = new JPanel();
+		JColorChooser chooser = new JColorChooser();
+		editColorPanel.add(chooser);
+
+		chooser.addPropertyChangeListener((PropertyChangeEvent e) -> {
+			thisNode.setBackground(chooser.getColor());
+		});
+
 		editMenu.add(editDeleteSelected);
 		editMenu.add(editSelectedProperties);
+		editMenu.add(editColorPanel);
 
 		ActionListener menuListener = new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -91,6 +105,7 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 		editSelectedProperties.setActionCommand(MainFrameActionHandler.EDITPROPS);
 		editSelectedProperties.addActionListener(menuListener);
+
 		return editMenu;
 	}
 

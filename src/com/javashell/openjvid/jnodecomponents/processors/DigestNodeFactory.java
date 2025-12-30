@@ -134,16 +134,17 @@ public class DigestNodeFactory {
 	@TypeName(typeName = "Scaling Digest", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createScalingDigestor(
 			@Label(label = "Input Resolution") Dimension resolution,
-			@Label(label = "Output Resolution") Dimension outputResolution, JNodeFlowPane flowPane) {
+			@Label(label = "Output Resolution") Dimension outputResolution, @Label(label = "Name") String name,
+			JNodeFlowPane flowPane) {
 		ScalingDigestor scaler = new ScalingDigestor(resolution, outputResolution);
 		FlowNode<VideoProcessor> scalerNode = new VideoFlowNode(scaler, null, null);
 		jVidNodeComponent<VideoProcessor> scalerNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, scalerNode);
+		scalerNodeComp.setNodeName(name);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
-				"Scaling Digest", resolution, outputResolution);
+				"Scaling Digest", resolution, outputResolution, name);
 
 		scalerNodeComp.setNodeType(NodeType.Transceiver);
-		scalerNodeComp.setNodeName("Scaler");
 		scalerNodeComp.setNodeComponentDescriptor(desc);
 
 		scaler.open();

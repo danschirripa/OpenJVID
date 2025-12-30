@@ -168,8 +168,8 @@ public class jVidConfigurationParser {
 						SwingUtilities.invokeAndWait(new Runnable() {
 							public void run() {
 								for (UUID child : children) {
-									jVidNodeComponent<?> childNode = compsByUUID.get(child);
 									try {
+										jVidNodeComponent<?> childNode = compsByUUID.get(child);
 										flowPane.createLinkage(origin, childNode);
 									} catch (IncorrectLinkageException e) {
 										e.printStackTrace();
@@ -206,9 +206,15 @@ public class jVidConfigurationParser {
 
 		// Filter out non-jvid related swing components
 		for (Component c : components) {
+			// If not a jvid related component, skip it
 			if (c instanceof jVidNodeComponent) {
 				var comp = (jVidNodeComponent) c;
+
+				// Run the pre-save hooks
 				comp.preSave();
+
+				// Retrieve the node component descriptor: Outlines the arguments used to
+				// re-create the node component
 				var desc = comp.getNodeComponentDescriptor();
 
 				exportString.append(comp.getUUID().toString() + "\n\t:" + desc.getContentClass() + "\n\t:" + comp.getX()

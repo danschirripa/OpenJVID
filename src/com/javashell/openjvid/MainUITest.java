@@ -1,6 +1,7 @@
 package com.javashell.openjvid;
 
 import java.io.File;
+import java.util.HashMap;
 
 import javax.swing.SwingUtilities;
 
@@ -34,14 +35,24 @@ public class MainUITest {
 		// If a configuration file was provided as an argument, attempt to verify the
 		// specified file
 		File savedConfig = null;
+		boolean doShow = true, isEmulated = false;
 
-		if (args.length > 0) {
-			savedConfig = new File(args[0]);
+		var parsed = parseArgs(args);
+
+		if (parsed.containsKey("config")) {
+			savedConfig = new File((String) parsed.get("config"));
 			if (!savedConfig.exists()) {
 				System.err.println("Specified configuration file innaccessible, " + savedConfig.getAbsolutePath());
 				savedConfig = null;
 			}
 		}
+
+		if (parsed.containsKey("headless")) {
+			doShow = false;
+		}
+
+		if (parsed.containsKey("emulated"))
+			isEmulated = true;
 
 		// Add the exit hook declared above
 		Runtime.getRuntime().addShutdownHook(hookThread);
@@ -49,7 +60,7 @@ public class MainUITest {
 		// Create the frame, (false = not emulation, true = emulation mode)
 		// Emulation mode creates dummy objects representative of actual flownodes, for
 		// graph creation without physical hardware
-		MainFrame mf = new MainFrame(false);
+		MainFrame mf = new MainFrame(isEmulated, doShow);
 
 		// Import and register all Lua extensions
 		try {
@@ -94,5 +105,24 @@ public class MainUITest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static HashMap<String, Object> parseArgs(String[] args) {
+		HashMap<String, Object> parsed = new HashMap<String, Object>();
+		for (int i = 0; i < args.length; i++) {
+			switch (args[i]) {
+			case "-headless":
+				parsed.put("headless", true);
+				break;
+			case "-config":
+				parsed.put("config", args[i + 1]);
+				i++;
+				break;
+			case "-emulated":
+				parsed.put("emulated", true);
+				break;
+			}
+		}
+		return parsed;
 	}
 }

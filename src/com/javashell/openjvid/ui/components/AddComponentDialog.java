@@ -47,10 +47,11 @@ import com.javashell.openjvid.ui.components.input.JackInputComponent;
 import com.javashell.openjvid.ui.components.input.JackInputComponent.JackInputClient;
 import com.javashell.openjvid.ui.components.input.PeripheralInputComponent;
 import com.javashell.openjvid.ui.components.input.StringInputComponent;
+import com.javashell.openjvid.ui.components.input.TestPatternInputComponent;
 import com.javashell.openjvid.ui.components.input.URLInputComponent;
-import com.javashell.openjvid.ui.components.input.gstreamer.VideoInputDeviceInputComponent;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.egressors.experimental.FFMPEGStreamEgressor;
+import com.javashell.video.ingestors.TestPatternIngestor.TestPattern;
 
 public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
@@ -129,6 +130,7 @@ public class AddComponentDialog extends JDialog {
 		inputComponents.put(float.class, FloatInputComponent.class);
 		inputComponents.put(JackInputClient.class, JackInputComponent.class);
 		inputComponents.put(FFMPEGStreamEgressor.VideoCodec.class, FFMPEGVideoCodecInputComponent.class);
+		inputComponents.put(TestPattern.class, TestPatternInputComponent.class);
 	}
 
 	private static JPanel currentInputPanel;

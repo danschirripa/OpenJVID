@@ -53,7 +53,7 @@ public class MainFrameMenuBar extends JMenuBar {
 						frameRate.setText("[n/a fps]");
 						return;
 					}
-					frameRate.setText(FlowController.getAverageInternalFrameRate() + " fps    |    "
+					frameRate.setText(FlowController.getAverageInternalFrameRate() + " fps (Ingress)    |    "
 							+ FlowController.getAverageFrameDelta() + "ns delta");
 				}
 			}

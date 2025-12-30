@@ -123,7 +123,7 @@ public class MatrixDigestorCrosspointDialog extends JDialog {
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1;
 		c.weighty = 1;
-		c.gridx = 1;
+		c.gridx = 0;
 		c.gridy = 0;
 		JPanel crossPointPanel = new JPanel();
 		crossPointPanel.setLayout(layout);

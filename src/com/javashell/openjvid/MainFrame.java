@@ -2,6 +2,7 @@ package com.javashell.openjvid;
 
 import java.awt.Component;
 import java.awt.GraphicsEnvironment;
+import java.awt.Point;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
@@ -29,7 +30,7 @@ public class MainFrame extends JFrame {
 	private final boolean isEmulated;
 	private Hashtable<UUID, jVidNodeComponent<?>> nodeComponents;
 
-	public MainFrame(boolean isEmulated) throws InvocationTargetException, InterruptedException {
+	public MainFrame(boolean isEmulated, boolean doShow) throws InvocationTargetException, InterruptedException {
 		this.isEmulated = isEmulated;
 		nodeComponents = new Hashtable<UUID, jVidNodeComponent<?>>();
 		SwingUtilities.invokeAndWait(new Runnable() {
@@ -37,8 +38,12 @@ public class MainFrame extends JFrame {
 				RadianceThemingCortex.GlobalScope.setSkin(new GraphiteSiennaSkin());
 				createFrame();
 				setSize(500, 500);
-				setLocation(GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint());
-				setVisible(true);
+
+				Point centerPoint = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+				centerPoint.translate(-250, -250);
+
+				setLocation(centerPoint);
+				setVisible(doShow);
 				setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			}
 		});

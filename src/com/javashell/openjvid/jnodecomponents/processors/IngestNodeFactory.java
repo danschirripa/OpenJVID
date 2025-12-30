@@ -28,6 +28,8 @@ import com.javashell.video.ingestors.LocalScreenIngestor;
 import com.javashell.video.ingestors.NDI5Ingestor;
 import com.javashell.video.ingestors.QOYStreamIngestor_V2;
 import com.javashell.video.ingestors.RawAudioIngestor;
+import com.javashell.video.ingestors.TestPatternIngestor;
+import com.javashell.video.ingestors.TestPatternIngestor.TestPattern;
 
 public class IngestNodeFactory {
 
@@ -78,7 +80,7 @@ public class IngestNodeFactory {
 	@TypeName(typeName = "QOYV Ingest", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createQOYVStreamIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "IP") String ip,
-			@Label(label = "Port") int port, JNodeFlowPane flowPane) {
+			@Label(label = "Port") int port, @Label(label = "Name") String name, JNodeFlowPane flowPane) {
 
 		var isMulticast = false;
 		QOYStreamIngestor_V2 qoyv = new QOYStreamIngestor_V2(resolution, ip, port, isMulticast);
@@ -86,9 +88,10 @@ public class IngestNodeFactory {
 		jVidNodeComponent<VideoProcessor> qoyvNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, qoyvNode);
 		FlowController.registerFlowNode(qoyvNode);
 		qoyvNodeComp.setNodeType(NodeType.Transmitter);
+		qoyvNodeComp.setNodeName(name);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
-				"QOYV Ingest", resolution, ip, port);
+				"QOYV Ingest", resolution, ip, port, name);
 
 		qoyvNodeComp.setNodeName("QOYV: " + ip);
 		qoyvNodeComp.setNodeComponentDescriptor(desc);
@@ -101,15 +104,16 @@ public class IngestNodeFactory {
 	@TypeName(typeName = "GStreamer Ingest", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createGstreamerIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "GStreamer String") String gstString,
-			JNodeFlowPane flowPane) {
+			@Label(label = "Name") String name, JNodeFlowPane flowPane) {
 		GStreamerIngestor gst = new GStreamerIngestor(resolution, gstString);
 		FlowNode<VideoProcessor> gstNode = new VideoFlowNode(gst, null, null);
 		jVidNodeComponent<VideoProcessor> gstNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, gstNode);
 		FlowController.registerFlowNode(gstNode);
 		gstNodeComp.setNodeType(NodeType.Transmitter);
+		gstNodeComp.setName(name);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
-				"GStreamer Ingest", resolution, gstString);
+				"GStreamer Ingest", resolution, gstString, name);
 
 		gstNodeComp.setNodeComponentDescriptor(desc);
 
@@ -127,6 +131,28 @@ public class IngestNodeFactory {
 		return null;
 	}
 
+	@TypeName(typeName = "Test Input", nodeType = NodeType.Transmitter)
+	public static jVidNodeComponent<VideoProcessor> createTestInput(@Label(label = "Resolution") Dimension resolution,
+			@Label(label = "Pattern") TestPattern pattern, @Label(label = "Name") String name, JNodeFlowPane flowPane) {
+		TestPatternIngestor testPattern = new TestPatternIngestor(resolution, pattern);
+		FlowNode<VideoProcessor> testPatternNode = new VideoFlowNode(testPattern, null, null);
+		jVidNodeComponent<VideoProcessor> testPatternNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane,
+				testPatternNode);
+
+		FlowController.registerFlowNode(testPatternNode);
+		testPatternNodeComp.setNodeType(NodeType.Transmitter);
+		testPatternNodeComp.setNodeName(name);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>("Test Input",
+				resolution, pattern, name);
+
+		testPatternNodeComp.setNodeComponentDescriptor(desc);
+
+		testPattern.open();
+
+		return testPatternNodeComp;
+	}
+
 	@TypeName(typeName = "FFmpeg Ingest (URL)", nodeType = NodeType.Transmitter)
 	public static jVidNodeComponent<VideoProcessor> createFFMPEGIngest(
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "URL") URL videoInput,
@@ -139,7 +165,7 @@ public class IngestNodeFactory {
 		ffmpegNodeComp.setNodeName(name);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
-				"FFmpeg Ingest (URL)", resolution, videoInput);
+				"FFmpeg Ingest (URL)", resolution, videoInput, name);
 
 		ffmpegNodeComp.setNodeComponentDescriptor(desc);
 
