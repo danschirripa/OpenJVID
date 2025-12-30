@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -15,8 +16,6 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 
 import com.javashell.flow.FlowController;
@@ -67,9 +66,11 @@ public class MainFrameMenuBar extends JMenuBar {
 		// File Menu item setup
 		JMenuItem fileSave = new JMenuItem("Save");
 		JMenuItem fileLoad = new JMenuItem("Load");
+		JMenuItem quit = new JMenuItem("Quit");
 		fileMenu.add(fileSave);
 		fileMenu.add(fileLoad);
 		fileMenu.add(loadRecent);
+		fileMenu.add(quit);
 
 		fileSave.setActionCommand(MainFrameActionHandler.FILESAVE);
 		fileSave.addActionListener(handler);
@@ -128,6 +129,18 @@ public class MainFrameMenuBar extends JMenuBar {
 		add(frameRate);
 	}
 
+	public void addRecent(String path) {
+		File recentFile = new File(System.getProperty("user.home"), ".jvid");
+		try {
+			FileWriter fw = new FileWriter(recentFile);
+			fw.write(path);
+			fw.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		loadRecents();
+	}
+
 	private void loadRecents() {
 		File recentFile = new File(System.getProperty("user.home"), ".jvid");
 		try {
@@ -145,6 +158,7 @@ public class MainFrameMenuBar extends JMenuBar {
 							jVidConfigurationParser.loadConfiguration(flowPane, file);
 						}
 					});
+					loadRecent.add(loadItem);
 				}
 			}
 			sc.close();

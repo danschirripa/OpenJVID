@@ -98,4 +98,8 @@ public class MainFrame extends JFrame {
 		return flowPane;
 	}
 
+	public MainFrameMenuBar getMainFrameMenuBar() {
+		return menuBar;
+	}
+
 }

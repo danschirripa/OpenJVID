@@ -19,14 +19,17 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import com.javashell.jnodegraph.JNodeFlowPane;
+import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
 
 public class UploadConfigurationDialog extends JDialog {
 	private JComboBox<InetAddress> peripheralChoices;
 	private JLabel inputLabel;
 	private File confFile;
+	private JNodeFlowPane flowPane;
 
-	public UploadConfigurationDialog() {
+	public UploadConfigurationDialog(JNodeFlowPane flowPane) {
 		JPanel mainPanel = new JPanel();
 		JPanel selectionPanel = createPeripheralSelectionPanel();
 		JPanel confSelectionPanel = createConfigurationSelectionPanel();
@@ -45,9 +48,27 @@ public class UploadConfigurationDialog extends JDialog {
 			}
 		});
 
-		mainPanel.add(uploadConfig, BorderLayout.SOUTH);
+		JButton uploadCurrentConfig = new JButton("Upload Current");
+		uploadCurrentConfig.addActionListener(new ActionListener() {
 
-		setSize(400, 500);
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				var selectedIP = (InetAddress) peripheralChoices.getSelectedItem();
+				var peripheral = PeripheralDiscoveryService.getDiscoveredPeripherals().get(selectedIP);
+				String currentConfig = jVidConfigurationParser.dumpConfiguration(flowPane);
+				PeripheralDiscoveryService.uploadConfiguration(currentConfig, peripheral);
+				JOptionPane.showMessageDialog(null, "Configuration uplaod completed");
+			}
+
+		});
+
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(uploadConfig);
+		buttonPanel.add(uploadCurrentConfig);
+
+		mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+		setSize(400, 150);
 		setContentPane(mainPanel);
 	}
 

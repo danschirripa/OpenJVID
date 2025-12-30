@@ -19,7 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Map; 
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -266,6 +266,24 @@ public class PeripheralDiscoveryService {
 			}
 			System.out.println("Wrote conf");
 			fin.close();
+			sock.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void uploadConfiguration(String configuration, PeripheralDescriptor desc) {
+		try (Socket sock = new Socket()) {
+			final byte[] confBytes = configuration.getBytes();
+			sock.connect(new InetSocketAddress(desc.getInetAddress(), PORT));
+			System.out.println("Connection successful");
+			sock.getOutputStream().write((PeripheralServerCommands.UPLOAD_CONFIGURATION.name() + "\n").getBytes());
+			sock.getOutputStream().write(ByteBuffer.allocate(4).putInt(confBytes.length).array());
+			System.out.println("Wrote UPLOAD\\n " + confBytes.length);
+			for (int i = 0; i < confBytes.length; i++) {
+				sock.getOutputStream().write(confBytes[i]);
+			}
+			System.out.println("Wrote conf");
 			sock.close();
 		} catch (Exception e) {
 			e.printStackTrace();

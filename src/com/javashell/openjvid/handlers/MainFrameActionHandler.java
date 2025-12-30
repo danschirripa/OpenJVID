@@ -15,6 +15,7 @@ import javax.swing.SwingUtilities;
 import com.javashell.flow.FlowController;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.MainFrame;
+import com.javashell.openjvid.MainFrameMenuBar;
 import com.javashell.openjvid.configuration.jVidConfigurationParser;
 import com.javashell.openjvid.configuration.jVidFileFilter;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
@@ -77,6 +78,7 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 					selectedFile = new File(selectedFile.getAbsolutePath() + ".jvid");
 				}
 				jVidConfigurationParser.saveConfiguration(flowPane, selectedFile);
+				frame.getMainFrameMenuBar().addRecent(selectedFile.getPath());
 			}
 			break;
 		case FILELOAD:
@@ -89,7 +91,7 @@ public class MainFrameActionHandler implements MouseListener, MouseMotionListene
 			}
 			break;
 		case UPLOAD:
-			UploadConfigurationDialog dia = new UploadConfigurationDialog();
+			UploadConfigurationDialog dia = new UploadConfigurationDialog(flowPane);
 			dia.setVisible(true);
 			break;
 		case DOWNLOAD:
