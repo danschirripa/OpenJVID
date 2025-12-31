@@ -44,4 +44,8 @@ public class IntegerInputComponent extends InputComponent<Integer> {
 	public Integer getParameter() {
 		return (int) intInput.getValue();
 	}
+	
+	public Integer attemptCreation(Object... params) {
+		return Integer.parseInt((String) params[0]);
+	}
 }

@@ -47,4 +47,8 @@ public class FloatInputComponent extends InputComponent<Float> {
 	public Float getParameter() {
 		return (float) floatInput.getValue();
 	}
+
+	public Float attemptCreation(Object... params) {
+		return Float.parseFloat((String) params[0]);
+	}
 }

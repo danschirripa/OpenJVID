@@ -34,5 +34,9 @@ public class StringInputComponent extends InputComponent<String> {
 	public String getParameter() {
 		return stringInput.getText();
 	}
+	
+	public String attemptCreation(Object... params) {
+		return (String) params[0];
+	}
 
 }

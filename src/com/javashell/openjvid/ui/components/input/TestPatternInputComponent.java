@@ -37,4 +37,8 @@ public class TestPatternInputComponent extends InputComponent<TestPattern> {
 	public TestPattern getParameter() {
 		return (TestPattern) testPatternSelector.getSelectedItem();
 	}
+
+	public TestPattern attemptCreation(Object... params) {
+		return TestPattern.valueOf((String) params[0]);
+	}
 }

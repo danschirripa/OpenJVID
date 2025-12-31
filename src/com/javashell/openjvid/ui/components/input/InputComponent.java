@@ -8,4 +8,6 @@ public abstract class InputComponent<T> {
 
 	public abstract T getParameter();
 
+	public abstract T attemptCreation(Object... params);
+
 }

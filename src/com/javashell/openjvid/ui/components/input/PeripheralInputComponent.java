@@ -42,4 +42,8 @@ public class PeripheralInputComponent extends InputComponent<PeripheralDescripto
 	public PeripheralDescriptor getParameter() {
 		return PeripheralDiscoveryService.getDiscoveredPeripherals().get(peripheralChoices.getSelectedItem());
 	}
+
+	public PeripheralDescriptor attemptCreation(Object... params) {
+		return PeripheralDiscoveryService.getDiscoveredPeripherals().get((String) params[0]);
+	}
 }

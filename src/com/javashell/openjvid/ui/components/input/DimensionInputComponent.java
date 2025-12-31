@@ -45,4 +45,8 @@ public class DimensionInputComponent extends InputComponent<Dimension> {
 		return new Dimension(width, height);
 	}
 
+	public Dimension attemptCreation(Object... params) {
+		return new Dimension((int) params[0], (int) params[1]);
+	}
+
 }

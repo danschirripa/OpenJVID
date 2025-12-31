@@ -36,6 +36,10 @@ public class JackInputComponent extends InputComponent<JackInputClient> {
 		return new JackInputClient((String) jackClientSelector.getSelectedItem());
 	}
 
+	public JackInputClient attemptCreation(Object... params) {
+		return new JackInputClient((String) params[0]);
+	}
+
 	public static class JackInputClient {
 		public final String clientName;
 

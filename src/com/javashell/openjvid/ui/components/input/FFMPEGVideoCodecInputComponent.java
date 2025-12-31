@@ -35,4 +35,8 @@ public class FFMPEGVideoCodecInputComponent extends InputComponent<FFMPEGStreamE
 		return (FFMPEGStreamEgressor.VideoCodec) ffmpegCodecs.getSelectedItem();
 	}
 
+	public FFMPEGStreamEgressor.VideoCodec attemptCreation(Object... params) {
+		return FFMPEGStreamEgressor.VideoCodec.valueOf((String) params[0]);
+	}
+
 }

@@ -13,6 +13,9 @@ import com.javashell.flow.FlowController;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.openjvid.MainFrame;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
+import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation;
+import com.javashell.openjvid.ui.components.AddComponentDialog;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
@@ -60,9 +63,13 @@ public class RestfulWebServer {
 	private void createEndpoints() {
 		String statusEndpoint = "/api/status";
 		endpoints.put(statusEndpoint, exchange -> {
+			setHeaders(exchange);
+
 			JSONObject statusObject = new JSONObject();
 			statusObject.put("IsPlaying", FlowController.isFlowing());
 			statusObject.put("JackCapable", FlowController.jackManager.isJackCapable());
+			statusObject.put("Framerate", FlowController.getAverageInternalFrameRate());
+			statusObject.put("FrameDelta", FlowController.getAverageFrameDelta());
 
 			var statusString = statusObject.toString();
 			exchange.sendResponseHeaders(200, statusString.getBytes().length);
@@ -74,6 +81,8 @@ public class RestfulWebServer {
 
 		String transportEndpoint = "/api/transport";
 		endpoints.put(transportEndpoint, exchange -> {
+			setHeaders(exchange);
+
 			if ("GET".equals(exchange.getRequestMethod())) {
 				JSONObject transportObject = new JSONObject();
 				transportObject.put("IsPlaying", FlowController.isFlowing());
@@ -109,8 +118,10 @@ public class RestfulWebServer {
 			exchange.close();
 		});
 
-		String listNodesEndpoint = "/api/nodes";
-		endpoints.put(listNodesEndpoint, exchange -> {
+		String listActiveNodesEndpoint = "/api/nodes/active";
+		endpoints.put(listActiveNodesEndpoint, exchange -> {
+			setHeaders(exchange);
+
 			if ("GET".equals(exchange.getRequestMethod())) {
 				var table = mf.getNodeComponents();
 				JSONObject nodeTable = new JSONObject();
@@ -145,6 +156,7 @@ public class RestfulWebServer {
 
 		String listLinkagesEndpoint = "/api/nodes/linkages";
 		endpoints.put(listLinkagesEndpoint, exchange -> {
+			setHeaders(exchange);
 			if ("GET".equals(exchange.getRequestMethod())) {
 				var linkages = flowPane.getLinkages();
 				var keySet = linkages.keySet();
@@ -173,6 +185,86 @@ public class RestfulWebServer {
 			}
 		});
 
+		String nodeListEndpoint = "/api/nodes/listAvailable";
+		endpoints.put(nodeListEndpoint, exchange -> {
+			setHeaders(exchange);
+
+			if ("GET".equals(exchange.getRequestMethod())) {
+				var nodeTypes = AddComponentDialog.componentTypes;
+				JSONObject transportObject = new JSONObject();
+				transportObject.put("Count", nodeTypes.length);
+				transportObject.put("AvailableNodes", new JSONArray(nodeTypes));
+
+				var transportString = transportObject.toString();
+				exchange.sendResponseHeaders(200, transportString.getBytes().length);
+				OutputStream out = exchange.getResponseBody();
+				out.write(transportString.getBytes());
+				out.flush();
+				exchange.close();
+				return;
+			}
+			exchange.sendResponseHeaders(400, -1);
+			exchange.close();
+		});
+
+		String nodeDetailsEndpoint = "/api/nodes/details";
+		endpoints.put(nodeDetailsEndpoint, exchange -> {
+			setHeaders(exchange);
+
+			if ("GET".equals(exchange.getRequestMethod())) {
+				var in = exchange.getRequestBody();
+				byte[] requestBytes = in.readAllBytes();
+				String requestString = new String(requestBytes);
+				try {
+
+					JSONObject request = new JSONObject(requestString);
+
+					JSONObject responseObject = new JSONObject();
+
+					String nodeName = (String) request.get("Name");
+					var callbackMethod = AddComponentDialog.callBackMethods.get(nodeName);
+					var pList = callbackMethod.getParameters();
+					var pTypeList = callbackMethod.getParameterTypes();
+
+					int index = 0;
+					for (var param : pTypeList) {
+						if (param.isAssignableFrom(JNodeFlowPane.class))
+							continue;
+						var p = pList[index];
+						ParameterLabelAnnotation.Label labelAnnotation = p
+								.getAnnotation(ParameterLabelAnnotation.Label.class);
+						String label = p.getName();
+						if (labelAnnotation != null) {
+							label = labelAnnotation.label();
+						}
+						responseObject.put(label, param.getName());
+						index++;
+					}
+
+					responseObject.put("Count", index);
+
+					var responseString = responseObject.toString();
+					exchange.sendResponseHeaders(200, responseString.getBytes().length);
+					OutputStream out = exchange.getResponseBody();
+					out.write(responseString.getBytes());
+					out.flush();
+					exchange.close();
+				} catch (Exception e) {
+					exchange.sendResponseHeaders(500, -1);
+					exchange.close();
+					return;
+				}
+				return;
+			}
+			exchange.sendResponseHeaders(400, -1);
+			exchange.close();
+		});
+
+	}
+
+	private void setHeaders(HttpExchange exchange) {
+		exchange.getResponseHeaders().add("Content-Type", "application/json");
+		exchange.getResponseHeaders().add("Connection", "Keep-Alive");
 	}
 
 }

@@ -36,4 +36,8 @@ public class FileInputComponent extends InputComponent<File> {
 	public File getParameter() {
 		return new File(pathInputField.getText());
 	}
+
+	public File attemptCreation(Object... params) {
+		return new File((String) params[0]);
+	}
 }

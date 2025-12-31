@@ -3,6 +3,7 @@ package com.javashell.openjvid.ui.components.input;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 import javax.swing.BorderFactory;
@@ -36,7 +37,16 @@ public class URLInputComponent extends InputComponent<URL> {
 	@Override
 	public URL getParameter() {
 		try {
-			return new URL(urlInput.getText());
+			return URI.create(urlInput.getText()).toURL();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public URL attemptCreation(Object... params) {
+		try {
+			return URI.create((String) params[0]).toURL();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 			return null;
