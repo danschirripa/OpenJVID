@@ -1,10 +1,15 @@
 package com.javashell.openjvid.rest;
 
+import java.awt.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+
+import javax.swing.SwingUtilities;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,6 +20,7 @@ import com.javashell.openjvid.MainFrame;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation;
 import com.javashell.openjvid.ui.components.AddComponentDialog;
+import com.javashell.openjvid.ui.components.input.InputComponent;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -258,6 +264,100 @@ public class RestfulWebServer {
 			}
 			exchange.sendResponseHeaders(400, -1);
 			exchange.close();
+		});
+
+		String createNodeEndpoint = "/api/nodes/create";
+		/*
+		 * { "NodeType": "Test Input", "ParameterList": { "Pattern": [ "SMPTE_COLORBARS"
+		 * ], "Resolution": [1920, 1080], "Name": ["Test Input"] } }
+		 */
+		endpoints.put(createNodeEndpoint, exchange -> {
+			if ("POST".equals(exchange.getRequestMethod())) {
+				try {
+					var in = exchange.getRequestBody();
+					byte[] requestBytes = in.readAllBytes();
+					String requestString = new String(requestBytes);
+
+					JSONObject requestObject = new JSONObject(requestString);
+					String nodeType = requestObject.getString("NodeType").toString();
+
+					// List of parameters, key is param label, value is param value
+					JSONObject parameterList = requestObject.getJSONObject("ParameterList");
+
+					Method callback = AddComponentDialog.callBackMethods.get(nodeType);
+					if (callback == null) {
+						exchange.sendResponseHeaders(400, -1);
+						exchange.close();
+						return;
+					}
+
+					var pList = callback.getParameters();
+					var pTypeList = callback.getParameterTypes();
+					var objList = new Object[pList.length];
+
+					int index = 0;
+					for (var param : pTypeList) {
+						if (param.isAssignableFrom(JNodeFlowPane.class)) {
+							objList[index] = flowPane;
+							index++;
+							continue;
+						}
+
+						var p = pList[index];
+						ParameterLabelAnnotation.Label labelAnnotation = p
+								.getAnnotation(ParameterLabelAnnotation.Label.class);
+						String label = p.getName();
+						if (labelAnnotation != null) {
+							label = labelAnnotation.label();
+						}
+
+						var paramValue = (JSONArray) parameterList.get(label);
+						var paramValueArray = new Object[paramValue.length()];
+						for (int i = 0; i < paramValue.length(); i++)
+							paramValueArray[i] = paramValue.get(i);
+
+						try {
+							var inputComponent = (InputComponent<?>) AddComponentDialog.inputComponents.get(param)
+									.getConstructors()[0].newInstance();
+							var realizedParam = inputComponent.attemptCreation(paramValueArray);
+							objList[index] = realizedParam;
+						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+								| InvocationTargetException | SecurityException e) {
+							exchange.sendResponseHeaders(500, -1);
+							e.printStackTrace();
+							exchange.close();
+							return;
+						}
+						index++;
+					}
+
+					SwingUtilities.invokeAndWait(() -> {
+						try {
+							Component vidComp;
+							vidComp = (Component) callback.invoke(null, objList);
+							flowPane.add(vidComp);
+						} catch (IllegalAccessException | InvocationTargetException e) {
+							try {
+								exchange.sendResponseHeaders(500, -1);
+							} catch (Exception e1) {
+								e1.printStackTrace();
+							}
+							e.printStackTrace();
+							return;
+						}
+						try {
+							exchange.sendResponseHeaders(200, -1);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					});
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					exchange.sendResponseHeaders(400, -1);
+					exchange.close();
+				}
+			}
 		});
 
 	}
