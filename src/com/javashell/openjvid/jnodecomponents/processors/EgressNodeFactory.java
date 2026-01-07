@@ -7,13 +7,14 @@ import com.javashell.flow.VideoFlowNode;
 import com.javashell.jnodegraph.JNodeFlowPane;
 import com.javashell.jnodegraph.NodeType;
 import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
+import com.javashell.openjvid.extensions.egressors.PTZFullScreenEgressor;
+import com.javashell.openjvid.extensions.egressors.PTZLocalWindowEgressor;
 import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.video.VideoProcessor;
 import com.javashell.video.egressors.LocalWindowEgressor;
 import com.javashell.video.egressors.NDI5Egressor;
-import com.javashell.video.egressors.PTZLocalWindowEgressor;
 import com.javashell.video.egressors.QOYStreamEgressor_V2;
 import com.javashell.video.egressors.RawAudioEgressor;
 import com.javashell.video.egressors.experimental.FFMPEGStreamEgressor;
@@ -41,7 +42,7 @@ public class EgressNodeFactory {
 	}
 
 	@TypeName(typeName = "PTZ Preview Frame", nodeType = NodeType.Receiver)
-	public static jVidNodeComponent<VideoProcessor> createPTZPreviewFrameEgress(
+	public static jVidNodeComponent<VideoProcessor> createPTZPreviewFrameEgress(@Label(label = "Name") String name,
 			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
 		PTZLocalWindowEgressor prev = new PTZLocalWindowEgressor(resolution);
 		FlowNode<VideoProcessor> previewNode = new VideoFlowNode(prev, null, null);
@@ -49,9 +50,34 @@ public class EgressNodeFactory {
 		prevNodeComp.setNodeType(NodeType.Receiver);
 
 		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
-				"Preview Frame", resolution);
+				"PTZ Preview Frame", name, resolution);
 
-		prevNodeComp.setNodeName("Preview Frame");
+		prevNodeComp.setNodeName(name);
+		prevNodeComp.setNodeComponentDescriptor(desc);
+
+		for (var point : prevNodeComp.getNodePoints()) {
+			if (point instanceof jVidNodeComponent.jVidControlNodePoint) {
+				point.setNodeType(NodeType.Transmitter);
+			}
+		}
+
+		prev.open();
+
+		return prevNodeComp;
+	}
+
+	@TypeName(typeName = "PTZ Full Screen", nodeType = NodeType.Receiver)
+	public static jVidNodeComponent<VideoProcessor> createPTZFullScreenEgress(@Label(label = "Name") String name,
+			@Label(label = "Resolution") Dimension resolution, JNodeFlowPane flowPane) {
+		PTZFullScreenEgressor prev = new PTZFullScreenEgressor(resolution);
+		FlowNode<VideoProcessor> previewNode = new VideoFlowNode(prev, null, null);
+		jVidNodeComponent<VideoProcessor> prevNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, previewNode);
+		prevNodeComp.setNodeType(NodeType.Receiver);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"PTZ Full Screen", name, resolution);
+
+		prevNodeComp.setNodeName(name);
 		prevNodeComp.setNodeComponentDescriptor(desc);
 
 		for (var point : prevNodeComp.getNodePoints()) {

@@ -86,13 +86,13 @@ public class LuajVidNodeComponent extends LuaUserdata {
 				Object toSend = null;
 
 				switch (argument.type()) {
-				case LuaType.STRING:
+				case STRING:
 					toSend = argument.getString();
 					break;
-				case LuaType.NUMBER:
+				case NUMBER:
 					toSend = argument.getInt();
 					break;
-				case LuaType.BOOLEAN:
+				case BOOLEAN:
 					toSend = argument.getBoolean();
 					break;
 				default:
@@ -277,13 +277,13 @@ public class LuajVidNodeComponent extends LuaUserdata {
 				Object toSend = null;
 
 				switch (argument.type()) {
-				case LuaType.STRING:
+				case STRING:
 					toSend = argument.getString();
 					break;
-				case LuaType.NUMBER:
+				case NUMBER:
 					toSend = argument.getInt();
 					break;
-				case LuaType.BOOLEAN:
+				case BOOLEAN:
 					toSend = argument.getBoolean();
 					break;
 				default:

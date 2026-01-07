@@ -272,6 +272,7 @@ public class RestfulWebServer {
 		 * ], "Resolution": [1920, 1080], "Name": ["Test Input"] } }
 		 */
 		endpoints.put(createNodeEndpoint, exchange -> {
+			setHeaders(exchange);
 			if ("POST".equals(exchange.getRequestMethod())) {
 				try {
 					var in = exchange.getRequestBody();
