@@ -53,13 +53,45 @@ import com.javashell.video.VideoProcessor;
 import com.javashell.video.egressors.experimental.FFMPEGStreamEgressor;
 import com.javashell.video.ingestors.TestPatternIngestor.TestPattern;
 
+/**
+ * Dialog used by the UI to add a new processing component (ingestor, processor,
+ * or egressor) to a {@link JNodeFlowPane}.
+ *
+ * <p>
+ * This dialog discovers available factory methods annotated with
+ * {@link TypeNameAnnotation.TypeName} in the Ingest/Digest/Egress factories
+ * and dynamically builds a form for the chosen component's parameters. The
+ * generated form uses registered {@link InputComponent} implementations to
+ * collect strongly-typed parameter values which are then passed to the factory
+ * method (or used to create an emulated component) when the user completes the
+ * dialog.
+ * </p>
+ *
+ * Responsibilities:
+ * - Present a sorted list of shown component types.
+ * - Generate an input panel for the selected factory method's parameters.
+ * - Invoke the selected factory method (or create an emulated component) and
+ *   add the resulting component to the provided {@link JNodeFlowPane}.
+ */
 public class AddComponentDialog extends JDialog {
 	private static final long serialVersionUID = -5715707375013666122L;
 
+	/**
+	 * All discovered component type names (ingest/digest/egress) mapped from
+	 * the annotated factory methods. Populated at class load time.
+	 */
 	public final static String[] componentTypes, shownComponentTypes;
 
+	/**
+	 * Map from component type name to the factory {@link Method} that creates it.
+	 * Populated during static initialization.
+	 */
 	public final static HashMap<String, Method> callBackMethods;
 
+	/**
+	 * Registry that maps Java parameter types to a UI {@link InputComponent}
+	 * implementation used to collect that parameter from the user.
+	 */
 	public final static HashMap<Class<?>, Class<? extends InputComponent<?>>> inputComponents;
 
 	static {
@@ -133,10 +165,30 @@ public class AddComponentDialog extends JDialog {
 		inputComponents.put(TestPattern.class, TestPatternInputComponent.class);
 	}
 
+	/**
+	 * The currently displayed input panel (updated when the selection changes).
+	 */
 	private static JPanel currentInputPanel;
+
+	/**
+	 * The flow pane that will receive newly created components.
+	 */
 	private final JNodeFlowPane pane;
+
+	/**
+	 * When true, the dialog will create an {@link EmulatedComponent} instead of
+	 * invoking the factory method directly. This is used for emulation/testing.
+	 */
 	private final boolean isEmulated;
 
+	/**
+	 * Create and show the Add Component dialog.
+	 *
+	 * @param owner      the parent frame used for dialog positioning
+	 * @param pane       the {@link JNodeFlowPane} to add the created component to
+	 * @param isEmulated if true, the dialog will construct an emulated component
+	 *                   instead of invoking the real factory method
+	 */
 	public AddComponentDialog(Frame owner, JNodeFlowPane pane, boolean isEmulated) {
 		super(owner, "Add Component", true);
 		this.setLocation(owner.getLocation());
@@ -179,6 +231,20 @@ public class AddComponentDialog extends JDialog {
 		pack();
 	}
 
+	/**
+	 * Build a vertical JPanel containing input widgets for every parameter of
+	 * the given factory {@link Method}.
+	 *
+	 * The method inspects parameter annotations to determine human-friendly
+	 * labels and looks up the appropriate {@link InputComponent} implementation
+	 * for each parameter's type using the {@link #inputComponents} registry. A
+	 * "Complete" button is appended which collects entered values, invokes the
+	 * target factory method (or constructs an emulated component), and adds the
+	 * resulting component to the dialog's target {@link JNodeFlowPane}.
+	 *
+	 * @param m the factory method to build inputs for (must not be null)
+	 * @return a JPanel with input widgets and a Complete button
+	 */
 	private JPanel generateInputPanel(Method m) {
 		JPanel inputPanel = new JPanel();
 		BoxLayout layout = new BoxLayout(inputPanel, BoxLayout.PAGE_AXIS);

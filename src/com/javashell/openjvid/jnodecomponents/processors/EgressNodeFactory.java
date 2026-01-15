@@ -13,6 +13,7 @@ import com.javashell.openjvid.jnodecomponents.jVidNodeComponent;
 import com.javashell.openjvid.jnodecomponents.processors.ParameterLabelAnnotation.Label;
 import com.javashell.openjvid.jnodecomponents.processors.TypeNameAnnotation.TypeName;
 import com.javashell.video.VideoProcessor;
+import com.javashell.video.egressors.FullScreenEgressor;
 import com.javashell.video.egressors.LocalWindowEgressor;
 import com.javashell.video.egressors.NDI5Egressor;
 import com.javashell.video.egressors.QOYStreamEgressor_V2;
@@ -26,6 +27,26 @@ public class EgressNodeFactory {
 			@Label(label = "Resolution") Dimension resolution, @Label(label = "Name") String name,
 			JNodeFlowPane flowPane) {
 		LocalWindowEgressor prev = new LocalWindowEgressor(resolution);
+		FlowNode<VideoProcessor> previewNode = new VideoFlowNode(prev, null, null);
+		jVidNodeComponent<VideoProcessor> prevNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, previewNode);
+		prevNodeComp.setNodeType(NodeType.Receiver);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"Preview Frame", resolution, name);
+
+		prevNodeComp.setNodeName(name);
+		prevNodeComp.setNodeComponentDescriptor(desc);
+
+		prev.open();
+
+		return prevNodeComp;
+	}
+	
+	@TypeName(typeName = "Fullscreen Preview", nodeType = NodeType.Receiver)
+	public static jVidNodeComponent<VideoProcessor> createFullScreenEgress(
+			@Label(label = "Resolution") Dimension resolution, @Label(label = "Name") String name,
+			JNodeFlowPane flowPane) {
+		FullScreenEgressor prev = new FullScreenEgressor(resolution);
 		FlowNode<VideoProcessor> previewNode = new VideoFlowNode(prev, null, null);
 		jVidNodeComponent<VideoProcessor> prevNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, previewNode);
 		prevNodeComp.setNodeType(NodeType.Receiver);

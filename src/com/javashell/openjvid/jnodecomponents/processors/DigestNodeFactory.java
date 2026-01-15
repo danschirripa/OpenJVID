@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import com.javashell.audio.dsp.BasicReverb;
 import com.javashell.audio.dsp.CombFilter;
-import com.javashell.audio.dsp.CombFilter.CombFilterType;
 import com.javashell.audio.dsp.GainFilter;
 import com.javashell.flow.FlowNode;
 import com.javashell.flow.VideoFlowNode;
@@ -212,7 +211,7 @@ public class DigestNodeFactory {
 	@TypeName(typeName = "CombFilter", nodeType = NodeType.Transceiver)
 	public static jVidNodeComponent<VideoProcessor> createCombFilterComponent(@Label(label = "Delay") float delay,
 			@Label(label = "Decay Factor") float decayFactor, JNodeFlowPane flowPane) {
-		CombFilter cf = new CombFilter(CombFilterType.FEED_FORWARD);
+		CombFilter cf = new CombFilter();
 		DigitalSignalDigestor dsp = new DigitalSignalDigestor(cf, delay, decayFactor);
 
 		FlowNode<VideoProcessor> dspNode = new VideoFlowNode(dsp, null, null);
