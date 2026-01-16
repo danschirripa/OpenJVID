@@ -1,0 +1,712 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>OpenJVID REST Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --card:#ffffff;
+  --muted:#6b7280;
+  --border:#e6e9ef;
+  --radius:12px;
+  --primary:#111827;
+  --accent:#7c3aed;
+  --accent-foreground:#ffffff;
+  --shadow: 0 6px 18px rgba(15,23,42,0.08);
+  --page-bg: linear-gradient(180deg,#f8fafc,#fff);
+  --response-bg: #0f172a;
+  --response-fg: #f8fafc;
+}
+[data-theme="dark"]{
+  --page-bg: linear-gradient(180deg,#030615,#07102a);
+  --card:#071028;
+  --primary:#e6eef9;
+  --muted:#9aa6bf;
+  --border: rgba(255,255,255,0.06);
+  --shadow: 0 10px 30px rgba(2,6,23,0.6);
+  --response-bg: #0b1220;
+  --response-fg: #e6eef9;
+  /* Inputs slightly lighter in dark mode for improved contrast */
+  .input, select, textarea { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); color: var(--primary); }
+  /* Ensure the select dropdown list follows the same dark background (some UAs ignore option styles without !important) */
+  select, select option, option { background: rgba(255,255,255,0.03) !important; color: var(--primary) !important; }
+  /* Slightly gray preset buttons in dark mode */
+  .preset-btn { background: #111827; color: var(--primary); border: 1px solid rgba(255,255,255,0.06); }
+  /* On Windows/IE/Edge adjust native dropdown arrow color (best-effort) */
+  select::-ms-expand { filter: invert(1) hue-rotate(180deg); }
+}
+
+html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;box-sizing:border-box;color:var(--primary);background:var(--page-bg);} 
+*{box-sizing:inherit}#root{padding:28px;max-width:980px;margin:0 auto}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}h2{margin:0;font-size:20px}p.lead{margin:4px 0 0;color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+/* Custom select (replaces native dropdown to allow full theming) */
+.native-hidden{display:none !important;} 
+.custom-select{position:relative;width:100%;}
+.custom-select-button{width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.custom-select-button:focus{outline:2px solid rgba(124,58,237,0.18);outline-offset:2px}
+.custom-select-list{position:absolute;z-index:90;left:0;right:0;margin-top:8px;border-radius:10px;max-height:280px;overflow:auto;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
+.custom-select-item{padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,0.03);} 
+.custom-select-item:last-child{border-bottom:none}
+.custom-select-item:hover{background:rgba(0,0,0,0.04)}
+/* Dark mode overrides for the custom list */
+[data-theme="dark"] .custom-select-button{background:rgba(255,255,255,0.03) !important;border:1px solid rgba(255,255,255,0.06) !important;color:var(--primary) !important}
+/* Use the opaque card color for the dropdown so it's not translucent/transparent */
+[data-theme="dark"] .custom-select-list{background-color:var(--card) !important; opacity:1 !important; border:1px solid rgba(255,255,255,0.04) !important;color:var(--primary) !important}
+[data-theme="dark"] .custom-select-item{background:transparent !important;color:var(--primary) !important;border-bottom:1px solid rgba(255,255,255,0.02) !important}
+[data-theme="dark"] .custom-select-item:hover{background:rgba(255,255,255,0.03) !important}
+[data-theme="dark"] .custom-select-item:hover{background:rgba(255,255,255,0.03) !important}
+label{display:block;margin-bottom:6px;font-size:13px;color:var(--primary)}
+.input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:transparent;font-size:13px;color:var(--primary);} 
+textarea{min-height:120px;resize:vertical}
+.controls{display:flex;gap:8px;margin-top:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--primary);cursor:pointer;font-weight:600}
+.btn-primary{background:linear-gradient(180deg,var(--accent),#6d28d9);color:var(--accent-foreground);box-shadow:0 6px 18px rgba(124,58,237,0.18);border:1px solid rgba(124,58,237,0.2)}
+.btn-ghost{background:transparent;border:1px solid var(--border);} 
+.preset-btn{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:#fafafa;font-size:13px}
+.muted{color:var(--muted);font-size:13px}
+#response{white-space:pre-wrap;background:var(--response-bg);color:var(--response-fg);padding:12px;border-radius:10px;min-height:240px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono","Noto Sans Mono",monospace;font-size:13px}
+footer{margin-top:8px;font-size:12px;color:var(--muted)}
+.theme-toggle{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--primary);cursor:pointer;font-size:13px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.card{padding:12px}}
+
+/* Tree view styles for node linkages */
+.linkage-tree{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; font-size:13px;}
+.linkage-tree ul{list-style:none;margin:6px 0;padding-left:18px;border-left:1px dashed rgba(0,0,0,0.06)}
+[data-theme="dark"] .linkage-tree ul{border-left:1px dashed rgba(255,255,255,0.04)}
+.linkage-node{position:relative;padding:6px 8px;border-radius:8px;margin:6px 0;display:flex;gap:8px;align-items:center}
+.linkage-node .label{flex:1}
+.linkage-node .meta{color:var(--muted);font-size:12px}
+.linkage-toggle{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer}
+.linkage-empty{color:var(--muted);font-size:13px;padding:8px}
+
+/* Diagram styles */
+.linkage-diagram{width:100%;overflow:auto;background:transparent;padding:12px;border-radius:10px}
+.linkage-diagram svg{width:100%;height:auto;display:block}
+.linkage-node-rect{fill:var(--card);stroke:var(--border);stroke-width:1;rx:8;filter: drop-shadow(0 4px 10px rgba(2,6,23,0.06));}
+[data-theme="dark"] .linkage-node-rect{fill:var(--card);stroke:rgba(255,255,255,0.06)}
+.linkage-node-text{font-size:13px;fill:var(--primary);pointer-events:none}
+.linkage-node-meta{font-size:11px;fill:var(--muted);pointer-events:none}
+.linkage-connector{stroke:rgba(120,120,120,0.18);stroke-width:1.5;fill:none}
+.linkage-connector-cycle{stroke:#ff4d4f;stroke-dasharray:4 4}
+.linkage-node-group{cursor:pointer}
+</style>
+
+</head><body>
+<div id="root">
+<header>
+  <div>
+    <h2>OpenJVID REST Console</h2>
+    <p class="lead">Lightweight UI for calling the local REST API (fetch-based)</p>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="Toggle color theme">
+      <!-- Icon inserted by script -->
+    </button>
+  </div>
+
+</header>
+
+<div class="grid">
+  <div class="card">
+    <label>Endpoint (e.g. /api/status or /api/nodes/create):</label>
+    <select id="endpoint" class="input native-hidden">
+      <option value="/api/status" selected>/api/status</option>
+      <option value="/api/transport">/api/transport</option>
+      <option value="/api/nodes/active">/api/nodes/active</option>
+      <option value="/api/nodes/linkages">/api/nodes/linkages</option>
+      <option value="/api/nodes/listAvailable">/api/nodes/listAvailable</option>
+      <option value="/api/nodes/details">/api/nodes/details</option>
+      <option value="/api/nodes/create">/api/nodes/create</option>
+      <option value="/">/ (UI root)</option>
+    </select>
+
+    <label style="margin-top:10px">Method:</label>
+    <select id="method" class="input native-hidden"><option>GET</option><option>POST</option><option>DELETE</option></select>
+    <label style="font-weight:normal; font-size:90%"><input id="useOverride" type="checkbox" checked> Use method-override (send as POST with X-HTTP-Method-Override when GET has a body)</label>
+
+    <label style="margin-top:8px">Request body (JSON for POST/DELETE):</label>
+    <textarea id="requestBody" class="input" rows="6" placeholder='{"IsPlaying": true}'></textarea>
+    <div class="controls">
+      <button id="sendBtn" class="btn btn-primary">Send</button>
+      <button id="clearBtn" class="btn btn-ghost">Clear Response</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h3 style="margin-top:0;margin-bottom:8px">Presets</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="preset-btn" onclick="setPreset('/api/status','GET')">/api/status (GET)</button>
+        <button class="preset-btn" onclick="setPreset('/api/transport','GET')">/api/transport (GET)</button>
+        <button class="preset-btn" onclick="setPreset('/api/nodes/active','GET')">/api/nodes/active (GET)</button>
+        <button class="preset-btn" onclick="setPreset('/api/nodes/listAvailable','GET')">/api/nodes/listAvailable (GET)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;margin-bottom:8px">Response</h3>
+      <div id="response">(no response yet)</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var moonSVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/></svg>';
+  var sunSVG  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79 1.8-1.79zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.03 1.05l1.79-1.79-1.79-1.79-1.79 1.79 1.79 1.79zM17.24 19.16l1.79 1.79 1.79-1.79-1.79-1.79-1.79 1.79zM20 11v2h3v-2h-3zM12 6a6 6 0 100 12 6 6 0 000-12zM4.24 19.16l1.79-1.79-1.79-1.79-1.79 1.79 1.79 1.79zM11 23h2v-3h-2v3z" fill="currentColor"/></svg>';
+  function setButtonIcon(btn, theme){ if(!btn) return; btn.innerHTML = (theme === 'dark') ? sunSVG : moonSVG; btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false'); }
+  function applyTheme(theme){
+    try{ document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('ojv-theme', theme); }catch(e){}
+    var btn = document.getElementById('themeToggle'); setButtonIcon(btn, theme);
+  }
+  function toggleTheme(){ var cur = document.documentElement.getAttribute('data-theme') || localStorage.getItem('ojv-theme'); var next;
+    if(cur === 'light' || cur === 'dark') next = (cur === 'dark') ? 'light' : 'dark';
+    else { 
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; next = prefersDark ? 'light' : 'dark';
+    }
+    applyTheme(next); }
+  try{ var saved = localStorage.getItem('ojv-theme'); if(saved === 'light' || saved === 'dark'){ applyTheme(saved); } else { var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; applyTheme(prefersDark ? 'dark' : 'light'); } }catch(e){}
+  window.toggleOJVTheme = toggleTheme;
+})();
+
+(function initCustomSelects(){
+  function createCustom(id){
+    var sel = document.getElementById(id); if(!sel) return; sel.classList.add('native-hidden');
+    var container = document.createElement('div'); container.className = 'custom-select';
+    var btn = document.createElement('button'); btn.type='button'; btn.className='custom-select-button'; btn.setAttribute('aria-haspopup','listbox'); btn.setAttribute('aria-expanded','false');
+    var labelSpan = document.createElement('span'); labelSpan.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : ''; btn.appendChild(labelSpan);
+    var arrow = document.createElement('span'); arrow.innerHTML='▾'; arrow.style.opacity = 0.7; btn.appendChild(arrow);
+    var list = document.createElement('div'); list.className='custom-select-list'; list.style.display='none'; list.setAttribute('role','listbox');
+    Array.prototype.forEach.call(sel.options, function(opt, i){ var item = document.createElement('div'); item.className='custom-select-item'; item.textContent = opt.text; item.dataset.value = opt.value; item.tabIndex = 0; item.setAttribute('role','option'); if(i===sel.selectedIndex) item.classList.add('selected'); item.addEventListener('click', function(){ selectItem(this); }); item.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectItem(this); } else if(e.key==='ArrowDown'){ e.preventDefault(); if(this.nextElementSibling) this.nextElementSibling.focus(); } else if(e.key==='ArrowUp'){ e.preventDefault(); if(this.previousElementSibling) this.previousElementSibling.focus(); } }); list.appendChild(item); });
+    function selectItem(item){ sel.value = item.dataset.value; sel.dispatchEvent(new Event('change')); labelSpan.textContent = item.textContent; Array.prototype.forEach.call(list.children, function(c){ c.classList.remove('selected'); }); item.classList.add('selected'); list.style.display='none'; btn.setAttribute('aria-expanded','false'); }
+    btn.addEventListener('click', function(e){ e.stopPropagation(); var open = list.style.display === 'block'; document.querySelectorAll('.custom-select-list').forEach(function(l){ l.style.display='none'; l.previousSibling && l.previousSibling.setAttribute('aria-expanded','false'); }); if(!open){ list.style.display='block'; btn.setAttribute('aria-expanded','true'); var selChild = list.querySelector('.selected'); if(selChild) selChild.focus(); else list.firstChild && list.firstChild.focus(); } else { list.style.display='none'; btn.setAttribute('aria-expanded','false'); } });
+    btn.addEventListener('keydown', function(e){ if(e.key==='ArrowDown'){ e.preventDefault(); list.style.display='block'; btn.setAttribute('aria-expanded','true'); var selChild = list.querySelector('.selected'); if(selChild) selChild.focus(); else list.firstChild && list.firstChild.focus(); } else if(e.key==='Escape'){ list.style.display='none'; btn.setAttribute('aria-expanded','false'); } });
+    sel.addEventListener('change', function(){ var opt = sel.options[sel.selectedIndex]; labelSpan.textContent = opt ? opt.text : ''; Array.prototype.forEach.call(list.children, function(c){ c.classList.remove('selected'); if(c.dataset.value === sel.value) c.classList.add('selected'); }); });
+    container.appendChild(btn); container.appendChild(list); sel.parentNode.insertBefore(container, sel.nextSibling);
+    document.addEventListener('click', function(){ list.style.display='none'; btn.setAttribute('aria-expanded','false'); });
+  }
+  try{ createCustom('endpoint'); createCustom('method'); }catch(e){}
+})();
+
+var examples = { '/api/status': '', '/api/transport': '{"IsPlaying": true}', '/api/nodes/active': '', '/api/nodes/linkages': '{"Origin": "<origin-uuid>", "Target": "<target-uuid>"}', '/api/nodes/listAvailable': '', '/api/nodes/details': '{"Name": "Test Input"}', '/api/nodes/create': '{"NodeType": "Test Input", "ParameterList": {"Pattern": ["SMPTE_COLORBARS"], "Resolution": [1920,1080], "Name": ["Test Input"]}}', '/': '' };
+
+window.setPreset = function(ep, method){ var sel = document.getElementById('endpoint'); if(sel) sel.value = ep; var m = document.getElementById('method'); if(m && method) { m.value = method; } var rb = document.getElementById('requestBody'); if(rb) { rb.value = ''; rb.placeholder = examples[ep] || ''; } };
+window.onerror = function(msg, src, line, col, err){ try{ var resp = document.getElementById('response'); if(resp) resp.textContent = 'JavaScript error: '+msg+' at '+src+':'+line+':'+col; }catch(e){} };
+
+(function attachHandlers(){
+  function setup(){
+    var sendBtn = document.getElementById('sendBtn');
+    var clearBtn = document.getElementById('clearBtn');
+    var endpointSel = document.getElementById('endpoint');
+    var rb = document.getElementById('requestBody');
+    if (endpointSel) { endpointSel.addEventListener('change', function(){ if(rb){ rb.value = ''; rb.placeholder = examples[endpointSel.value] || ''; } }); if(rb) rb.placeholder = examples[endpointSel.value] || ''; }
+    if (sendBtn) sendBtn.addEventListener('click', async function(){
+      const ep = document.getElementById('endpoint').value;
+      let method = document.getElementById('method').value;
+      var bodyEl = document.getElementById('requestBody');
+      let body = '';
+      if (bodyEl) { body = (bodyEl.value && bodyEl.value.trim().length>0) ? bodyEl.value : (bodyEl.placeholder || ''); }
+      var useOverrideEl = document.getElementById('useOverride');
+      var willOverride = (method === 'GET' && body && body.trim().length > 0 && useOverrideEl && useOverrideEl.checked);
+      var effectiveMethod = willOverride ? 'POST' : method;
+      let options = { method: effectiveMethod, headers: {} };
+      try {
+        if (body && body.trim().length > 0) {
+          JSON.parse(body);
+          options.body = body;
+          options.headers['Content-Type'] = 'application/json';
+        }
+      } catch (e) {
+        alert('Request body is not valid JSON: ' + e);
+        return;
+      }
+      if (willOverride) {
+        options.headers['X-HTTP-Method-Override'] = 'GET';
+      }
+      const respEl = document.getElementById('response'); if(respEl) respEl.textContent = '(waiting...)';
+      try{
+        const r = await fetch(ep, options);
+        const contentType = r.headers.get('content-type') || '';
+        let text = await r.text();
+        if (contentType.indexOf('application/json') !== -1) { try{ text = JSON.stringify(JSON.parse(text), null, 2); } catch(e) {} }
+        if(respEl) respEl.textContent = 'Status: ' + r.status + '\n\n' + text;
+      } catch(e){ if(respEl) respEl.textContent = 'Request failed: ' + e; }
+    });
+    if (clearBtn) clearBtn.addEventListener('click', function(){ var resp = document.getElementById('response'); if(resp) resp.textContent='(no response yet)'; });
+  }
+  var themeBtn = document.getElementById('themeToggle'); if(themeBtn){ themeBtn.addEventListener('click', function(){ toggleOJVTheme(); }); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', setup); } else { setup(); }
+})();
+</script>
+
+<footer class="muted">Tip: use the presets to quickly populate common endpoints.</footer>
+
+<!-- Node Linkages Tree (added) -->
+<div class="card" id="linkagesCard">
+  <h3 style="margin-top:0;margin-bottom:8px">Node Linkages</h3>
+  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+    <button id="loadLinkagesBtn" class="btn btn-primary">Load Node Linkages</button>
+    <button id="refreshLinkagesBtn" class="btn btn-ghost">Refresh</button>
+    <label style="margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13px"><input id="autoRefresh" type="checkbox" checked> Auto-refresh</label>
+  </div>
+  <div id="linkagesContainer" class="linkage-tree">
+    <div class="linkage-empty">No data loaded. Click "Load Node Linkages" to fetch from <code>/api/nodes/linkages</code>.</div>
+  </div>
+  <div style="margin-top:8px;color:var(--muted);font-size:12px">Tip: click the small toggles to expand/collapse branches. The renderer will avoid infinite loops on cycles.</div>
+</div>
+
+</div>
+
+<script>
+// The following script is appended after the document content so it can locate the linkages container.
+(function(){
+  // Helper to normalize different likely payloads from the linkages endpoint.
+  function normalizeLinkagesPayload(data){
+    // Possible shapes handled:
+    // - Array of { Origin, Target } or { origin, target }
+    // - Object { links: [..], nodes: { id: { Name: ... } } }
+    // - Object { Linkages: [..] }
+    if(!data) return { links: [], nodes: {} };
+    if(Array.isArray(data)) return { links: data, nodes: {} };
+    var links = [];
+    var nodes = {};
+    if(Array.isArray(data.Linkages)) links = data.Linkages;
+    else if(Array.isArray(data.links)) links = data.links;
+    else if(Array.isArray(data.linkages)) links = data.linkages;
+    // If the server returns an object mapping originId -> [ targetId, ... ] (the RestfulWebServer implementation), convert to links
+    else {
+      // Heuristic: all values are arrays of strings (UUIDs)
+      var allKeysAreArrays = true;
+      var hasAtLeastOneArray = false;
+      for(var k in data){
+        if(Object.prototype.hasOwnProperty.call(data,k)){
+          if(Array.isArray(data[k])){ hasAtLeastOneArray = true; for(var i=0;i<data[k].length;i++){ if(typeof data[k][i] !== 'string'){ allKeysAreArrays = false; break; } } }
+          else { allKeysAreArrays = false; break; }
+        }
+      }
+      if(allKeysAreArrays && hasAtLeastOneArray){
+        // Build adjacency directly for efficiency
+        var adj = {};
+        for(var origin in data){ if(Object.prototype.hasOwnProperty.call(data, origin)){ adj[origin] = Array.isArray(data[origin]) ? data[origin].slice() : []; if(!adj[origin]) adj[origin]=[]; } }
+        return { adj: adj, links: [], nodes: {} };
+      }
+    }
+    // If object contains edges under other keys, attempt to find an array of simple objects
+    if(links.length === 0){
+      for(var k in data){ if(Array.isArray(data[k])){ var maybe = data[k]; if(maybe.length && maybe[0] && (maybe[0].Origin || maybe[0].origin || maybe[0].Target || maybe[0].target)) { links = maybe; break; } } }
+    }
+    // nodes map
+    if(data.nodes && typeof data.nodes === 'object') nodes = data.nodes;
+    if(data.Nodes && typeof data.Nodes === 'object') nodes = data.Nodes;
+    return { links: links, nodes: nodes };
+  }
+
+  function buildAdjacency(links){
+    var adj = {};
+    links.forEach(function(l){
+      var o = l.Origin || l.origin || l.source || l.Source || null;
+      var t = l.Target || l.target || l.dest || l.Destination || l.TargetNode || null;
+      if(!o || !t) return;
+      if(!adj[o]) adj[o] = [];
+      adj[o].push(t);
+      if(!adj[t]) adj[t] = adj[t] || []; // ensure node exists in map (so leaves appear)
+    });
+    return adj;
+  }
+
+  function renderTree(container, adj, nodes){
+    // Render as an SVG tree diagram. Compute per-node sizes to fit content, then layout and draw.
+    container.innerHTML = '';
+    var H_GAP = 24, V_GAP = 72, PAD = 20;
+    // Grid configuration: nodes will snap to this grid
+    var GRID_SIZE = 24;
+
+    var allNodes = Object.keys(adj);
+    if(allNodes.length === 0){ container.innerHTML = '<div class="linkage-empty">No linkages found.</div>'; return; }
+
+    // Create a hidden measuring SVG so we can measure text sizes with the same CSS
+    var measSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    measSvg.setAttribute('style','position:absolute;left:-9999px;top:-9999px;visibility:hidden;width:0;height:0;overflow:hidden');
+    document.body.appendChild(measSvg);
+
+    var nodeW = {}, nodeH = {}, lineHeight = 16, padX = 16, padY = 10, minW = 100;
+    allNodes.forEach(function(id){
+      var name = (nodes && nodes[id] && (nodes[id].Name || nodes[id].name)) || id;
+      // Prefer contentClass (returned by /api/nodes/active). Fall back to other fields if absent.
+      var rawClass = '';
+      if(nodes && nodes[id]){
+        rawClass = nodes[id].contentClass || nodes[id].ContentClass || nodes[id].Meta || nodes[id].meta || '';
+      }
+      // Short UUID for inline display (first 8 chars) but leave full id available in tooltip
+      var shortId = (typeof id === 'string' && id.length > 8) ? id.substring(0,8) : id;
+      var metaText = '';
+      if(rawClass){ metaText = rawClass + ' (' + shortId + ')'; }
+      else { metaText = (name === id) ? '' : shortId; }
+      var tName = document.createElementNS('http://www.w3.org/2000/svg','text'); tName.setAttribute('class','linkage-node-text'); tName.textContent = name; measSvg.appendChild(tName);
+      var nameBBox = tName.getBBox();
+      var metaBBox = { width:0, height:0 };
+      if(metaText){ var tMeta = document.createElementNS('http://www.w3.org/2000/svg','text'); tMeta.setAttribute('class','linkage-node-meta'); tMeta.textContent = metaText; measSvg.appendChild(tMeta); metaBBox = tMeta.getBBox(); }
+      var w = Math.max(minW, Math.ceil(Math.max(nameBBox.width, metaBBox.width) + padX*2));
+      var h = Math.ceil(nameBBox.height + (metaBBox.height || 0) + padY*2 + 4);
+      nodeW[id] = w; nodeH[id] = Math.max(h, 36);
+    });
+    // remove measuring svg
+    document.body.removeChild(measSvg);
+
+    // Compute targets set to find roots
+    var targets = new Set();
+    Object.keys(adj).forEach(function(k){ adj[k].forEach(function(t){ targets.add(t); }); });
+    var roots = Object.keys(adj).filter(function(n){ return !targets.has(n); });
+    if(roots.length === 0) roots = Object.keys(adj);
+
+    var collapsed = new Set();
+    var positions = {}, depths = {};
+
+    function subtreeWidth(nodeId, visited){
+      if(visited.has(nodeId)) return nodeW[nodeId] || minW; // cycle
+      if(collapsed.has(nodeId)) return nodeW[nodeId] || minW;
+      var children = adj[nodeId] || [];
+      if(!children || children.length === 0) return nodeW[nodeId] || minW;
+      var sum = 0;
+      var localVisited = new Set(visited); localVisited.add(nodeId);
+      children.forEach(function(c){ sum += subtreeWidth(c, localVisited) + H_GAP; });
+      return Math.max(nodeW[nodeId] || minW, sum - H_GAP);
+    }
+
+    var currentX = PAD, maxY = 0;
+    function layoutSubtree(nodeId, depth, visited){
+      if(visited.has(nodeId)){
+        positions[nodeId] = positions[nodeId] || { x: currentX + (nodeW[nodeId]||minW)/2, y: depth * ( (nodeH[nodeId]||36) + V_GAP) + PAD };
+        depths[nodeId] = Math.max(depths[nodeId] || 0, depth);
+        currentX += (nodeW[nodeId]||minW) + H_GAP;
+        maxY = Math.max(maxY, positions[nodeId].y);
+        return;
+      }
+      var w = subtreeWidth(nodeId, visited);
+      var startX = currentX;
+      var children = adj[nodeId] || [];
+      if(children.length === 0 || collapsed.has(nodeId)){
+        var cx = startX + w/2;
+        positions[nodeId] = { x: cx, y: depth * ( (nodeH[nodeId]||36) + V_GAP) + PAD };
+        depths[nodeId] = Math.max(depths[nodeId] || 0, depth);
+        currentX += w + H_GAP;
+        maxY = Math.max(maxY, positions[nodeId].y);
+        return;
+      }
+      var localVisited = new Set(visited); localVisited.add(nodeId);
+      children.forEach(function(c){ layoutSubtree(c, depth+1, localVisited); });
+      var firstChild = positions[children[0]];
+      var lastChild = positions[children[children.length-1]];
+      var cx = (firstChild.x + lastChild.x)/2;
+      positions[nodeId] = { x: cx, y: depth * ( (nodeH[nodeId]||36) + V_GAP) + PAD };
+      depths[nodeId] = Math.max(depths[nodeId] || 0, depth);
+      maxY = Math.max(maxY, positions[nodeId].y);
+    }
+
+    roots.forEach(function(r){ layoutSubtree(r, 0, new Set()); });
+
+    // Snap computed positions to the GRID_SIZE. This aligns node centers to the grid.
+    // Snapping happens before computing svg extents so the viewBox aligns with the grid.
+    if (GRID_SIZE > 1) {
+      Object.keys(positions).forEach(function(k){
+        positions[k].x = Math.round((positions[k].x) / GRID_SIZE) * GRID_SIZE;
+        positions[k].y = Math.round((positions[k].y) / GRID_SIZE) * GRID_SIZE;
+      });
+    }
+    
+    // Compute SVG dimensions by considering node widths
+    var minX = Infinity, maxX = -Infinity;
+    Object.keys(positions).forEach(function(k){ var p=positions[k]; var w = nodeW[k]||minW; if(p.x - w/2 < minX) minX = p.x - w/2; if(p.x + w/2 > maxX) maxX = p.x + w/2; });
+    minX = Math.min(minX, PAD); maxX = Math.max(maxX, PAD + minW);
+    var svgW = Math.max(600, Math.ceil(maxX - minX + PAD*2));
+    var svgH = Math.ceil(maxY + (Math.max.apply(null, Object.values(nodeH)) || 36) + PAD*2);
+
+    var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('width','100%');
+    svg.setAttribute('height', svgH);
+    svg.setAttribute('viewBox', '0 0 '+svgW+' '+svgH);
+
+    // If minX is less than PAD then some nodes may render outside the left edge.
+    // Compute an offset to shift everything right so all content is visible inside viewBox.
+    var offsetX = Math.max(0, PAD - minX);
+  
+    // Create a content group so we can pan/zoom everything together
+    var contentG = document.createElementNS('http://www.w3.org/2000/svg','g');
+    // Initially translate by offsetX so leftmost content is padded
+    var tx = offsetX, ty = 0, scale = 1;
+    function applyTransform(){ contentG.setAttribute('transform', 'translate(' + tx + ',' + ty + ') scale(' + scale + ')'); }
+    applyTransform();
+
+    // Create a subtle grid background that lives inside the content group so it pans/zooms
+    // Create defs on the svg and a pattern sized to GRID_SIZE
+    try{
+      var theme = (document.documentElement && document.documentElement.getAttribute('data-theme')) || 'light';
+      // Use a slightly stronger stroke so the grid is visible; keep it subtle but noticeable
+      var gridStroke = theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+      var pattern = document.createElementNS('http://www.w3.org/2000/svg','pattern');
+      pattern.setAttribute('id','ojvGrid');
+      pattern.setAttribute('patternUnits','userSpaceOnUse');
+      pattern.setAttribute('width', GRID_SIZE);
+      pattern.setAttribute('height', GRID_SIZE);
+      // Draw a clean vertical at x=0 and horizontal at y=0 for each tile so grid lines align crisply
+      var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d', 'M 0 0 L 0 ' + GRID_SIZE + ' M 0 0 L ' + GRID_SIZE + ' 0');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', gridStroke);
+      path.setAttribute('stroke-width', '1');
+      pattern.appendChild(path);
+      defs.appendChild(pattern);
+      svg.appendChild(defs);
+
+      // Add a rect that covers a very large area and uses the grid pattern; place inside contentG so it pans/zooms
+      // This makes the grid appear "infinite" when panning in any direction.
+      var LARGE = 200000; // 200k x 200k canvas
+      var HALF = LARGE/2;
+      var gridRect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      gridRect.setAttribute('x', -HALF);
+      gridRect.setAttribute('y', -HALF);
+      gridRect.setAttribute('width', LARGE);
+      gridRect.setAttribute('height', LARGE);
+      gridRect.setAttribute('fill', 'url(#ojvGrid)');
+      // Make grid fully opaque (pattern lines control subtlety); reduce opacity if too strong
+      gridRect.setAttribute('opacity', '1');
+      contentG.appendChild(gridRect);
+    }catch(e){ /* non-fatal: if grid creation fails, continue without grid */ }
+
+    // Persisted manual node positions (so dragged nodes keep their places across re-renders)
+    container._manualPositions = container._manualPositions || {};
+
+    // Apply any manual positions set by dragging so those nodes keep their coordinates
+    Object.keys(container._manualPositions || {}).forEach(function(mid){ if(positions[mid]){ positions[mid] = container._manualPositions[mid]; } });
+
+    // Helper to convert screen/client coordinates into content coordinates (accounts for tx/ty/scale)
+    function screenToContentCoords(clientX, clientY){ var rect = svg.getBoundingClientRect(); var sx = clientX - rect.left; var sy = clientY - rect.top; var cx = (sx - tx)/scale; var cy = (sy - ty)/scale; return { x: cx, y: cy }; }
+
+    // Helper to detect simple cycles (child is ancestor of parent in traversal)
+    function visitedPathContains(parent, child, adjMap){
+      // Do a DFS from child to see if we can reach parent (simple cycle detection)
+      var stack = [child]; var seen = new Set();
+      while(stack.length){
+        var n = stack.pop();
+        if(n === parent) return true;
+        if(seen.has(n)) continue;
+        seen.add(n);
+        (adjMap[n]||[]).forEach(function(x){ if(!seen.has(x)) stack.push(x); });
+      }
+      return false;
+    }
+
+    // Draw connectors into contentG (use positions without per-element offset). Tag each path with parent/child IDs for live updates.
+    Object.keys(adj).forEach(function(parent){
+       var pPos = positions[parent]; if(!pPos) return;
+       var children = adj[parent] || [];
+       if(collapsed.has(parent)) return;
+       children.forEach(function(child){
+         var cPos = positions[child]; if(!cPos) return;
+         var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+         var startX = pPos.x, startY = pPos.y + (nodeH[parent]||36)/2;
+         var endX = cPos.x, endY = cPos.y - (nodeH[child]||36)/2;
+         var midY = (startY + endY)/2;
+         var d = 'M '+startX+' '+startY+' C '+startX+' '+midY+' '+endX+' '+midY+' '+endX+' '+endY;
+         path.setAttribute('d', d);
+         // tag the path so it can be updated during drags
+         try{ path.dataset.parent = parent; path.dataset.child = child; }catch(e){}
+         if(visitedPathContains(parent, child, adj)) path.setAttribute('class','linkage-connector-cycle'); else path.setAttribute('class','linkage-connector');
+         contentG.appendChild(path);
+       });
+     });
+
+    // Draw nodes sized to their content into contentG; add pointer-based drag handlers to allow live repositioning with snap-to-grid
+    var dragState = { id: null, startPointer: null, startPos: null, moved: false };
+    Object.keys(positions).forEach(function(id){
+       var p = positions[id];
+       var w = nodeW[id] || minW; var h = nodeH[id] || 36;
+       var gx = (p.x) - w/2;
+       var gy = p.y;
+       var g = document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('transform','translate('+(gx)+','+gy+')'); g.setAttribute('class','linkage-node-group');
+       var rect = document.createElementNS('http://www.w3.org/2000/svg','rect'); rect.setAttribute('width', w); rect.setAttribute('height', h); rect.setAttribute('rx',8); rect.setAttribute('class','linkage-node-rect');
+       var name = (nodes && nodes[id] && (nodes[id].Name || nodes[id].name)) || id;
+       var t = document.createElementNS('http://www.w3.org/2000/svg','text'); t.setAttribute('x', 12); t.setAttribute('y', Math.round(h/2) - 4); t.setAttribute('class','linkage-node-text'); t.textContent = name;
+       // Use contentClass as meta when available and include a short UUID; add a title for full UUID tooltip
+       var rawClass = '';
+       if(nodes && nodes[id]){
+         rawClass = nodes[id].contentClass || nodes[id].ContentClass || nodes[id].Meta || nodes[id].meta || '';
+       }
+       var shortId = (typeof id === 'string' && id.length > 8) ? id.substring(0,8) : id;
+       var metaText = '';
+       if(rawClass){ metaText = rawClass + ' (' + shortId + ')'; }
+       else { metaText = (name === id ? '' : shortId); }
+       var meta = document.createElementNS('http://www.w3.org/2000/svg','text'); meta.setAttribute('x', 12); meta.setAttribute('y', Math.round(h/2) + 12); meta.setAttribute('class','linkage-node-meta'); meta.textContent = metaText;
+       // Title element for tooltip showing full name and UUID
+       try{
+         var titleEl = document.createElementNS('http://www.w3.org/2000/svg','title');
+         titleEl.textContent = name + ' — ' + id;
+         g.appendChild(titleEl);
+       }catch(e){}
+       g.appendChild(rect); g.appendChild(t); if(metaText) g.appendChild(meta);
+      // Pointer-based drag handler. Use pointer events so we can capture across the window and avoid interfering with pan/zoom.
+      g.addEventListener('pointerdown', function(e){
+        e.stopPropagation(); e.preventDefault();
+        // start dragging
+        if(g.setPointerCapture) try{ g.setPointerCapture(e.pointerId); }catch(er){}
+        dragState.id = id; dragState.startPointer = screenToContentCoords(e.clientX, e.clientY); dragState.startPos = { x: positions[id].x, y: positions[id].y }; dragState.moved = false;
+
+        function onPointerMove(ev){
+          var cur = screenToContentCoords(ev.clientX, ev.clientY);
+          var dx = cur.x - dragState.startPointer.x; var dy = cur.y - dragState.startPointer.y;
+          if(!dragState.moved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) dragState.moved = true;
+          if(dragState.moved){
+            var newX = dragState.startPos.x + dx; var newY = dragState.startPos.y + dy;
+            var snappedX = Math.round(newX / GRID_SIZE) * GRID_SIZE; var snappedY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+            // update model
+            positions[id] = { x: snappedX, y: snappedY };
+            container._manualPositions = container._manualPositions || {}; container._manualPositions[id] = { x: snappedX, y: snappedY };
+            // update node visual
+            var newGX = snappedX - (nodeW[id]||minW)/2; var newGY = snappedY;
+            g.setAttribute('transform', 'translate(' + newGX + ',' + newGY + ')');
+            // update connected paths live
+            Array.prototype.forEach.call(contentG.querySelectorAll('path'), function(pth){ try{ if(pth.dataset.parent === id || pth.dataset.child === id){ var par = pth.dataset.parent; var chi = pth.dataset.child; var pP = positions[par]; var cP = positions[chi]; if(!pP || !cP) return; var sX = pP.x, sY = pP.y + (nodeH[par]||36)/2; var eX = cP.x, eY = cP.y - (nodeH[chi]||36)/2; var mY = (sY + eY)/2; var d2 = 'M '+sX+' '+sY+' C '+sX+' '+mY+' '+eX+' '+mY+' '+eX+' '+eY; pth.setAttribute('d', d2); } }catch(ee){} });
+          }
+        }
+
+        function onPointerUp(ev){
+          if(g.releasePointerCapture) try{ g.releasePointerCapture(ev.pointerId); }catch(er){}
+          window.removeEventListener('pointermove', onPointerMove); window.removeEventListener('pointerup', onPointerUp);
+          var wasMoved = dragState.moved; dragState.id = null;
+          if(!wasMoved){
+            // treat as click/toggle
+            if(collapsed.has(id)) collapsed.delete(id); else collapsed.add(id);
+            renderTree(container, adj, nodes);
+          }
+        }
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+      });
+       contentG.appendChild(g);
+     });
+
+     // Append content group to svg after we've built it
+     svg.appendChild(contentG);
+
+    // --- Pan & Zoom handlers ---
+    // Attach pan/zoom only once per wrapper to avoid duplicate listeners
+    var wrapper = document.createElement('div'); wrapper.className = 'linkage-diagram'; wrapper.appendChild(svg);
+    container.appendChild(wrapper);
+
+    if(!wrapper._zoomInitialized){
+      wrapper._zoomInitialized = true;
+      // state variables
+      var isPanning = false, startX = 0, startY = 0;
+      // pointer down for panning
+      svg.addEventListener('mousedown', function(e){ if(e.button !== 0) return; isPanning = true; svg.style.cursor = 'grabbing'; startX = e.clientX - tx; startY = e.clientY - ty; e.preventDefault(); });
+      window.addEventListener('mousemove', function(e){ if(!isPanning) return; tx = e.clientX - startX; ty = e.clientY - startY; applyTransform(); });
+      window.addEventListener('mouseup', function(){ if(isPanning){ isPanning = false; svg.style.cursor = 'default'; } });
+      // wheel zoom (centered on mouse)
+      svg.addEventListener('wheel', function(e){ e.preventDefault(); var rect = svg.getBoundingClientRect(); var mx = e.clientX - rect.left; var my = e.clientY - rect.top; var delta = -e.deltaY; var zoomFactor = delta > 0 ? 1.12 : 0.88; var newScale = Math.max(0.1, Math.min(4, scale * zoomFactor)); // clamp
+        // Adjust tx/ty so zoom centers at mouse
+        tx = mx - (mx - tx) * (newScale/scale);
+        ty = my - (my - ty) * (newScale/scale);
+        scale = newScale; applyTransform(); }, { passive: false });
+      // double click to reset
+      svg.addEventListener('dblclick', function(e){ scale = 1; tx = offsetX; ty = 0; applyTransform(); });
+      // pointer cursor
+      svg.style.cursor = 'grab';
+    }
+    // end pan/zoom
+  }
+
+  // Node linkages auto-fetch and render logic
+  var autoTimer = null;
+  function fetchAndRenderLinkages(){
+    var container = document.getElementById('linkagesContainer');
+    if(!container) return;
+    var resp = document.getElementById('response');
+    container.innerHTML = '<div class="linkage-empty">Loading...</div>';
+    // Note: auto-init and interval wiring is handled by init(); this function only fetches and renders.
+
+    // Actual fetch and render
+    var ep = '/api/nodes/linkages';
+    var method = 'GET';
+    var body = '';
+    var options = { method: method, headers: {} };
+    const respEl = document.getElementById('response'); if(respEl) respEl.textContent = '(waiting...)';
+    try{
+      fetch(ep, options)
+      .then(r => r.json())
+      .then(data => {
+        try{
+          var norm = normalizeLinkagesPayload(data);
+          // If server returned adjacency map directly, use it; otherwise build adjacency from links array
+          var adj = norm.adj || buildAdjacency(norm.links || []);
+          // If adjacency is empty (no keys), show empty
+          if(!adj || Object.keys(adj).length === 0){ container.innerHTML = '<div class="linkage-empty">No linkages found.</div>'; if(respEl) respEl.textContent = 'Status: 200 OK (no linkages)'; return; }
+          // Resolve node names from /api/nodes/active when possible and merge server-provided nodes as fallback
+          fetch('/api/nodes/active').then(r2 => {
+            if(!r2.ok) return {};
+            return r2.json();
+          }).then(activeNodes => {
+            var nodesMap = activeNodes || {};
+            if(norm.nodes && typeof norm.nodes === 'object'){
+              for(var k in norm.nodes){ if(Object.prototype.hasOwnProperty.call(norm.nodes,k)){ if(!nodesMap[k]) nodesMap[k] = norm.nodes[k]; } }
+            }
+            renderTree(container, adj, nodesMap);
+            if(respEl) respEl.textContent = 'Status: 200 OK';
+          }).catch(err2 => {
+            // Active nodes fetch failed; fall back to server-provided nodes
+            var nodesMap = norm.nodes || {};
+            renderTree(container, adj, nodesMap);
+            if(respEl) respEl.textContent = 'Status: 200 OK (names unavailable)';
+          });
+         }catch(e){ container.innerHTML = '<div class="linkage-empty">Error processing data.</div>'; if(respEl) respEl.textContent = 'Data error: ' + e; }
+       })
+       .catch(e => { container.innerHTML = '<div class="linkage-empty">Error loading data.</div>'; if(respEl) respEl.textContent = 'Load error: ' + e; });
+    }catch(e){ container.innerHTML = '<div class="linkage-empty">Error.</div>'; if(respEl) respEl.textContent = 'Error: ' + e; }
+  }
+
+  // Initial setup and event wiring
+  function init(){
+    var loadBtn = document.getElementById('loadLinkagesBtn');
+    var refreshBtn = document.getElementById('refreshLinkagesBtn');
+    var autoCheck = document.getElementById('autoRefresh');
+    var container = document.getElementById('linkagesContainer');
+
+    if (loadBtn) loadBtn.addEventListener('click', function(){
+      fetchAndRenderLinkages();
+    });
+    if (refreshBtn) refreshBtn.addEventListener('click', function(){
+      fetchAndRenderLinkages();
+    });
+    if (autoCheck) autoCheck.addEventListener('change', function(){
+      if(autoCheck.checked){ fetchAndRenderLinkages(); autoTimer = setInterval(fetchAndRenderLinkages, 5000); }
+      else { if(autoTimer) clearInterval(autoTimer); }
+    });
+
+    // If the checkbox is present and checked (checked by default in HTML), start fetching and polling.
+    // Expose the fetch function to window and ensure it runs after DOM is ready (covers various load orders).
+    try{
+      window.fetchAndRenderLinkages = fetchAndRenderLinkages;
+      window._ojvLinkagesAutoInit = function(){
+        try{
+          if(autoCheck && autoCheck.checked){ fetchAndRenderLinkages(); if(autoTimer) clearInterval(autoTimer); autoTimer = setInterval(fetchAndRenderLinkages, 5000); }
+          else { fetchAndRenderLinkages(); }
+        }catch(e){}
+      };
+      if(document.readyState === 'complete' || document.readyState === 'interactive'){
+        // DOM already ready
+        window._ojvLinkagesAutoInit();
+      } else {
+        document.addEventListener('DOMContentLoaded', window._ojvLinkagesAutoInit);
+      }
+    }catch(e){ /* ignore */ }
+  }
+
+  // Initial call to setup everything
+  init();
+})();
+</script>
+
+
