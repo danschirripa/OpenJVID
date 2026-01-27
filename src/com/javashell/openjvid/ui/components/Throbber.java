@@ -2,6 +2,7 @@ package com.javashell.openjvid.ui.components;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 
 import javax.swing.JComponent;
@@ -37,7 +38,9 @@ public class Throbber extends JComponent {
 	}
 
 	@Override
-	public void paintComponent(Graphics g) {
+	public void paintComponent(Graphics g1) {
+		Graphics2D g = (Graphics2D) g1;
+		g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
 		int angle = iteration * angularDelta;
 		int opacity = 255;
 		// g.drawOval(midpoint.x, midpoint.y, 10, 10);

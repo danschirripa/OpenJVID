@@ -101,6 +101,11 @@ footer{margin-top:8px;font-size:12px;color:var(--muted)}
   </div>
 
   <div style="display:flex;align-items:center;gap:8px">
+    <div id="fpsCounter" aria-hidden="true" style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1 15h2v2h-2v-2zm0-10h2v8h-2V7z"></path></svg>
+      <div id="fpsValue">-- FPS</div>
+    </div>
+
     <button id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="Toggle color theme">
       <!-- Icon inserted by script -->
     </button>
@@ -131,7 +136,11 @@ footer{margin-top:8px;font-size:12px;color:var(--muted)}
     <div class="controls">
       <button id="sendBtn" class="btn btn-primary">Send</button>
       <button id="clearBtn" class="btn btn-ghost">Clear Response</button>
+      <button id="downloadConfigBtn" class="btn preset-btn" title="Download current configuration from /api/config">Download Config</button>
+      <button id="uploadConfigBtn" class="btn preset-btn" title="Upload configuration to /api/config">Upload Config</button>
     </div>
+    <!-- hidden file input used by Upload Config; default filter prefers .jvid files -->
+    <input id="configFileInput" type="file" accept=".jvid,.json,.txt,.cfg,text/*" style="display:none" />
   </div>
 
   <div>
@@ -196,13 +205,14 @@ window.setPreset = function(ep, method){ var sel = document.getElementById('endp
 window.onerror = function(msg, src, line, col, err){ try{ var resp = document.getElementById('response'); if(resp) resp.textContent = 'JavaScript error: '+msg+' at '+src+':'+line+':'+col; }catch(e){} };
 
 (function attachHandlers(){
-  function setup(){
-    var sendBtn = document.getElementById('sendBtn');
-    var clearBtn = document.getElementById('clearBtn');
-    var endpointSel = document.getElementById('endpoint');
-    var rb = document.getElementById('requestBody');
-    if (endpointSel) { endpointSel.addEventListener('change', function(){ if(rb){ rb.value = ''; rb.placeholder = examples[endpointSel.value] || ''; } }); if(rb) rb.placeholder = examples[endpointSel.value] || ''; }
-    if (sendBtn) sendBtn.addEventListener('click', async function(){
+   function setup(){
+    try {
+     var sendBtn = document.getElementById('sendBtn');
+     var clearBtn = document.getElementById('clearBtn');
+     var endpointSel = document.getElementById('endpoint');
+     var rb = document.getElementById('requestBody');
+     if (endpointSel) { endpointSel.addEventListener('change', function(){ if(rb){ rb.value = ''; rb.placeholder = examples[endpointSel.value] || ''; } }); if(rb) rb.placeholder = examples[endpointSel.value] || ''; }
+     if (sendBtn) sendBtn.addEventListener('click', async function(){
       const ep = document.getElementById('endpoint').value;
       let method = document.getElementById('method').value;
       var bodyEl = document.getElementById('requestBody');
@@ -234,14 +244,84 @@ window.onerror = function(msg, src, line, col, err){ try{ var resp = document.ge
         if(respEl) respEl.textContent = 'Status: ' + r.status + '\n\n' + text;
       } catch(e){ if(respEl) respEl.textContent = 'Request failed: ' + e; }
     });
+    // Download /api/config handler
+    var downloadBtn = document.getElementById('downloadConfigBtn');
+    if (downloadBtn) downloadBtn.addEventListener('click', async function(){
+      var respEl = document.getElementById('response'); if(respEl) respEl.textContent = '(waiting...)';
+      try{
+        const r = await fetch('/api/config', { method: 'GET' });
+        const contentType = r.headers.get('content-type') || '';
+        const text = await r.text();
+        if (r.status !== 200) {
+          if(respEl) respEl.textContent = 'Status: ' + r.status + '\n\n' + text;
+          return;
+        }
+        var parsed = null;
+        try{ parsed = JSON.parse(text); } catch(e) { parsed = null; }
+        var configString = null;
+        if (parsed && parsed.Config !== undefined) { configString = parsed.Config; }
+        else if (typeof text === 'string') { configString = text; }
+        if (configString === null || configString === undefined) {
+          if(respEl) respEl.textContent = 'No Config found in response.\n\n' + text;
+          return;
+        }
+        // If configString looks like JSON string containing JSON, try to pretty-print
+        var output = configString;
+        try{ output = JSON.stringify(JSON.parse(configString), null, 2); } catch(e) { /* leave as-is */ }
+        // Ask user for a filename (default uses .jvid extension)
+        var defaultName = 'openjvid_config.jvid';
+        try{
+          var userFilename = prompt('Enter filename to save configuration (include extension or leave blank to use "' + defaultName + '"):', defaultName);
+        }catch(pe){ userFilename = defaultName; }
+        if(userFilename === null) { // user cancelled
+          if(respEl) respEl.textContent = 'Download cancelled by user.';
+          return;
+        }
+        userFilename = ('' + (userFilename || '')).trim();
+        if(userFilename.length === 0) userFilename = defaultName;
+        // If user didn't provide an extension, default to .jvid
+        if(userFilename.indexOf('.') === -1) userFilename = userFilename + '.jvid';
+        var blob = new Blob([output], { type: 'application/octet-stream' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = userFilename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        if(respEl) respEl.textContent = 'Downloaded configuration to file: ' + userFilename + '\n\n' + output.substring(0, 2000);
+       } catch(e){ if(respEl) respEl.textContent = 'Request failed: ' + e; }
+     });
+ 
+     // Upload /api/config handler
+     var uploadBtn = document.getElementById('uploadConfigBtn');
+     var fileInput = document.getElementById('configFileInput');
+     if (uploadBtn) uploadBtn.addEventListener('click', function(){ if(fileInput) fileInput.click(); });
+     if (fileInput) fileInput.addEventListener('change', function(e){
+       var f = (fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
+       if(!f) return;
+      // If the user selected a file filter other than .jvid, we still accept it but show the filename in response
+      var reader = new FileReader();
+       reader.onload = async function(ev){
+         var text = ev.target.result;
+         // Build request body: { Config: text }
+         var payload = { Config: text };
+         var respEl = document.getElementById('response'); if(respEl) respEl.textContent = '(waiting...)';
+         try{
+           const r = await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+           var bodyText = await r.text();
+           if(r.status === 200){ if(respEl) respEl.textContent = 'Upload successful (HTTP 200) — uploaded file: ' + f.name; }
+           else { if(respEl) respEl.textContent = 'Upload failed. Status: ' + r.status + '\n\n' + bodyText; }
+         } catch(e){ if(respEl) respEl.textContent = 'Upload failed: ' + e; }
+       };
+       reader.readAsText(f);
+       // clear selection so same file can be re-selected later
+       fileInput.value = null;
+     });
     if (clearBtn) clearBtn.addEventListener('click', function(){ var resp = document.getElementById('response'); if(resp) resp.textContent='(no response yet)'; });
-  }
+    } catch (setupErr) {
+      try{ var resp = document.getElementById('response'); if(resp) resp.textContent = 'Handler setup error: ' + setupErr; else console.error('Handler setup error:', setupErr); }catch(e){ console.error('Handler setup error and failed to report to UI:', e, setupErr); }
+    }
+   }
   var themeBtn = document.getElementById('themeToggle'); if(themeBtn){ themeBtn.addEventListener('click', function(){ toggleOJVTheme(); }); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', setup); } else { setup(); }
 })();
 </script>
-
-<footer class="muted">Tip: use the presets to quickly populate common endpoints.</footer>
 
 <!-- Node Linkages Tree (added) -->
 <div class="card" id="linkagesCard">
@@ -709,4 +789,41 @@ window.onerror = function(msg, src, line, col, err){ try{ var resp = document.ge
 })();
 </script>
 
+<!-- Insert FPS counter element into the header and add a small script to measure and display FPS -->
 
+<!-- (replaced rAF-based script with server-backed status polling) -->
+<script>
+(function(){
+  var fpsElement = document.getElementById('fpsValue');
+  var failedCount = 0;
+  async function fetchFramerate(){
+    if(!fpsElement) return;
+    try{
+      const res = await fetch('/api/status', { method: 'GET', headers: { 'Accept': 'application/json' } });
+      if(!res.ok){ throw new Error('HTTP ' + res.status); }
+      const data = await res.json();
+      // Server returns Framerate field per RestfulWebServer
+      var fr = data && (data.Framerate !== undefined ? data.Framerate : (data.Framerate || data.framerate || data.frameRate || data.FrameRate));
+      // Display rounded numeric framerate when available
+      if(typeof fr === 'number' && isFinite(fr)){
+        fpsElement.textContent = Math.round(fr) + ' FPS';
+      } else if(fr){
+        fpsElement.textContent = String(fr) + ' FPS';
+      } else {
+        fpsElement.textContent = '-- FPS';
+      }
+      failedCount = 0;
+    }catch(e){
+      // On error, show placeholder and back off a bit after repeated failures
+      failedCount++;
+      if(failedCount > 5) fpsElement.textContent = '-- FPS';
+      else fpsElement.textContent = fpsElement.textContent || '-- FPS';
+    }
+  }
+  // Initial fetch, then poll every second
+  fetchFramerate();
+  var pollInterval = setInterval(fetchFramerate, 1000);
+  // Expose a simple API for debugging/testing
+  window._ojv_frameratePoll = { stop: function(){ clearInterval(pollInterval); }, fetchNow: fetchFramerate };
+})();
+</script>

@@ -7,7 +7,10 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.util.HashMap;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -21,7 +24,10 @@ import com.javashell.jnodegraph.exceptions.IncorrectLinkageException;
 import com.javashell.openjvid.configuration.jVidNodeComponentDescriptor;
 import com.javashell.openjvid.handlers.MainFrameActionHandler;
 import com.javashell.openjvid.ui.IconManager;
+import com.javashell.openjvid.ui.components.AddComponentDialog;
+import com.javashell.openjvid.ui.components.input.InputComponent;
 import com.javashell.video.ControlInterface;
+import com.javashell.video.VideoProcessor;
 
 public class jVidNodeComponent<T> extends JNodeComponent {
 	private final FlowNode<T> node;
@@ -95,6 +101,8 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 				case MainFrameActionHandler.DELETE:
 					break;
 				case MainFrameActionHandler.EDITPROPS:
+					JDialog propsDialog = createPropertiesDialog(ha);
+					propsDialog.setVisible(true);
 					break;
 				}
 			}
@@ -107,6 +115,53 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 		editSelectedProperties.addActionListener(menuListener);
 
 		return editMenu;
+	}
+
+	private JDialog createPropertiesDialog(JNodeFlowPane ha) {
+		JDialog dialog = new JDialog();
+		dialog.setTitle("Node Properties - " + this.getNodeName());
+		dialog.setSize(400, 300);
+		dialog.setModal(true);
+		dialog.setLocationRelativeTo(ha);
+
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+		var propTable = ((VideoProcessor) this.node.retrieveNodeContents()).getPropertyTable();
+		var inputComponents = new HashMap<String, InputComponent<?>>();
+		for (var key : propTable.keySet()) {
+			var value = propTable.get(key);
+			if (AddComponentDialog.inputComponents.containsKey(value.getClass())) {
+				InputComponent<?> inputComponent;
+				try {
+					inputComponent = (InputComponent<?>) AddComponentDialog.inputComponents.get(value.getClass())
+							.getConstructors()[0].newInstance();
+					panel.add(inputComponent.getPanel(key));
+					inputComponents.put(key, inputComponent);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+
+		JButton applyButton = new JButton("Apply");
+		applyButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				for (var key : inputComponents.keySet()) {
+					var inputComp = inputComponents.get(key);
+					var value = inputComp.getParameter();
+					propTable.put(key, value);
+				}
+				((VideoProcessor) node.retrieveNodeContents()).setPropertyTable(propTable);
+				dialog.dispose();
+			}
+		});
+
+		panel.add(applyButton);
+
+		dialog.add(panel);
+		return dialog;
 	}
 
 	@Override

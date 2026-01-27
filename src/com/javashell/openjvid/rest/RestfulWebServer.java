@@ -162,12 +162,60 @@ public class RestfulWebServer {
 			exchange.close();
 		});
 
+		String configEndpoint = "/api/config";
+		endpoints.put(configEndpoint, exchange -> {
+			setHeaders(exchange);
+
+			String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
+			if (method == null)
+				method = exchange.getRequestMethod();
+
+			if ("GET".equals(method)) {
+				String config = mf.dumpConfiguration();
+				JSONObject configObject = new JSONObject();
+				configObject.put("Config", config);
+
+				var configObjectString = configObject.toString();
+				exchange.sendResponseHeaders(200, configObjectString.getBytes().length);
+				OutputStream out = exchange.getResponseBody();
+				out.write(configObjectString.getBytes());
+				out.flush();
+				exchange.close();
+			} else if ("POST".equals(method)) {
+				InputStream in = exchange.getRequestBody();
+				byte[] requestBytes = in.readAllBytes();
+				String requestString = new String(requestBytes);
+				JSONObject request = new JSONObject(requestString);
+				if (request.has("Config")) {
+					String config = request.getString("Config");
+					try {
+						// Load configuration on the Swing thread
+						SwingUtilities.invokeAndWait(() -> {
+							mf.loadConfiguration(config);
+						});
+						exchange.sendResponseHeaders(200, -1);
+					} catch (Exception e) {
+						e.printStackTrace();
+						exchange.sendResponseHeaders(500, -1);
+					}
+				} else {
+					exchange.sendResponseHeaders(400, -1);
+				}
+				exchange.close();
+			} else {
+				exchange.sendResponseHeaders(400, -1);
+				exchange.close();
+			}
+		});
+
 		String transportEndpoint = "/api/transport";
 		endpoints.put(transportEndpoint, exchange -> {
 			setHeaders(exchange);
-            // Respect X-HTTP-Method-Override when present so clients can send bodies for GET
-            String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
-            if (method == null) method = exchange.getRequestMethod();
+			// Respect X-HTTP-Method-Override when present so clients can send bodies for
+			// GET
+			String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
+			if (method == null)
+				method = exchange.getRequestMethod();
 
 			if ("GET".equals(method)) {
 				JSONObject transportObject = new JSONObject();
@@ -207,8 +255,9 @@ public class RestfulWebServer {
 		String listActiveNodesEndpoint = "/api/nodes/active";
 		endpoints.put(listActiveNodesEndpoint, exchange -> {
 			setHeaders(exchange);
-            String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
-            if (method == null) method = exchange.getRequestMethod();
+			String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
+			if (method == null)
+				method = exchange.getRequestMethod();
 
 			if ("GET".equals(method)) {
 				var table = mf.getNodeComponents();
@@ -221,20 +270,20 @@ public class RestfulWebServer {
 					var nodeType = node.getNodeType();
 					Object contents = null;
 					try {
-                        contents = node.getNode().retrieveNodeContents();
-                    } catch (Exception e) {
-                        // defensive: if retrieval fails, leave contents null
-                        contents = null;
-                    }
-                    String nodeContentClass = "";
-                    if (contents != null) {
-                        try {
-                            nodeContentClass = contents.getClass().getSimpleName();
-                        } catch (Exception e) {
-                            // fallback to toString if something unusual happens
-                            nodeContentClass = contents.getClass().getName();
-                        }
-                    }
+						contents = node.getNode().retrieveNodeContents();
+					} catch (Exception e) {
+						// defensive: if retrieval fails, leave contents null
+						contents = null;
+					}
+					String nodeContentClass = "";
+					if (contents != null) {
+						try {
+							nodeContentClass = contents.getClass().getSimpleName();
+						} catch (Exception e) {
+							// fallback to toString if something unusual happens
+							nodeContentClass = contents.getClass().getName();
+						}
+					}
 
 					idTable.put("name", nodeName);
 					idTable.put("type", nodeType.name());
@@ -260,8 +309,9 @@ public class RestfulWebServer {
 		String listLinkagesEndpoint = "/api/nodes/linkages";
 		endpoints.put(listLinkagesEndpoint, exchange -> {
 			setHeaders(exchange);
-            String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
-            if (method == null) method = exchange.getRequestMethod();
+			String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
+			if (method == null)
+				method = exchange.getRequestMethod();
 			if ("GET".equals(method)) {
 				var linkages = flowPane.getLinkages();
 				var keySet = linkages.keySet();
@@ -417,8 +467,9 @@ public class RestfulWebServer {
 		String nodeListEndpoint = "/api/nodes/listAvailable";
 		endpoints.put(nodeListEndpoint, exchange -> {
 			setHeaders(exchange);
-           String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
-            if (method == null) method = exchange.getRequestMethod();
+			String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
+			if (method == null)
+				method = exchange.getRequestMethod();
 
 			if ("GET".equals(method)) {
 				var nodeTypes = AddComponentDialog.componentTypes;
@@ -441,8 +492,9 @@ public class RestfulWebServer {
 		String nodeDetailsEndpoint = "/api/nodes/details";
 		endpoints.put(nodeDetailsEndpoint, exchange -> {
 			setHeaders(exchange);
-           String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
-            if (method == null) method = exchange.getRequestMethod();
+			String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
+			if (method == null)
+				method = exchange.getRequestMethod();
 
 			if ("GET".equals(method)) {
 				var in = exchange.getRequestBody();
@@ -500,8 +552,9 @@ public class RestfulWebServer {
 		 */
 		endpoints.put(createNodeEndpoint, exchange -> {
 			setHeaders(exchange);
-           String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
-            if (method == null) method = exchange.getRequestMethod();
+			String method = exchange.getRequestHeaders().getFirst("X-HTTP-Method-Override");
+			if (method == null)
+				method = exchange.getRequestMethod();
 			if ("POST".equals(method)) {
 				try {
 					var in = exchange.getRequestBody();
@@ -548,7 +601,7 @@ public class RestfulWebServer {
 
 						try {
 							var inputComponent = (InputComponent<?>) AddComponentDialog.inputComponents.get(param)
-								.getConstructors()[0].newInstance();
+									.getConstructors()[0].newInstance();
 							var realizedParam = inputComponent.attemptCreation(paramValueArray);
 							objList[index] = realizedParam;
 						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

@@ -90,6 +90,14 @@ public class MainFrame extends JFrame {
 		jVidConfigurationParser.loadConfiguration(flowPane, configuration);
 	}
 
+	public void loadConfiguration(String configuration) {
+		jVidConfigurationParser.loadConfigurationFromString(flowPane, configuration);
+	}
+
+	public String dumpConfiguration() {
+		return jVidConfigurationParser.dumpConfiguration(flowPane);
+	};
+
 	public Hashtable<UUID, jVidNodeComponent<?>> getNodeComponents() {
 		return nodeComponents;
 	}
