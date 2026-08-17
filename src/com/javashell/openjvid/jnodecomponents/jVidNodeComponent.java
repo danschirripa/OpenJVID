@@ -11,6 +11,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -27,6 +28,7 @@ import com.javashell.openjvid.ui.IconManager;
 import com.javashell.openjvid.ui.components.AddComponentDialog;
 import com.javashell.openjvid.ui.components.input.InputComponent;
 import com.javashell.video.ControlInterface;
+import com.javashell.video.digestors.MultiviewDigestor;
 import com.javashell.video.VideoProcessor;
 
 public class jVidNodeComponent<T> extends JNodeComponent {
@@ -93,6 +95,66 @@ public class jVidNodeComponent<T> extends JNodeComponent {
 
 		editMenu.add(editDeleteSelected);
 		editMenu.add(editSelectedProperties);
+
+		if (node.retrieveNodeContents() instanceof MultiviewDigestor) {
+			MultiviewDigestor mvd = (MultiviewDigestor) node.retrieveNodeContents();
+			JMenu multiviewMenu = new JMenu("Multiview Layout");
+
+			JMenuItem grid1x2 = new JMenuItem("Grid 1x2");
+			grid1x2.addActionListener(e -> {
+				mvd.setGridLayout(1, 2);
+			});
+
+			JMenuItem grid2x2 = new JMenuItem("Grid 2x2");
+			grid2x2.addActionListener(e -> {
+				mvd.setGridLayout(2, 2);
+			});
+
+			JMenuItem pipRight = new JMenuItem("PiP Right");
+			pipRight.addActionListener(e -> {
+				mvd.setLayoutMode("PIP_RIGHT");
+			});
+
+			multiviewMenu.add(grid1x2);
+			multiviewMenu.add(grid2x2);
+			multiviewMenu.add(pipRight);
+			editMenu.add(multiviewMenu);
+
+			JMenu layeringMenu = new JMenu("Multiview Layering");
+			int slotCount = mvd.getViewportLayoutSnapshot().size();
+			for (int i = 0; i < slotCount; i++) {
+				final int slotIndex = i;
+				JMenu slotMenu = new JMenu("Slot " + slotIndex);
+
+				JMenuItem bringToFront = new JMenuItem("Bring To Front");
+				bringToFront.addActionListener(e -> {
+					mvd.bringViewportToFront(slotIndex);
+				});
+
+				JMenuItem sendToBack = new JMenuItem("Send To Back");
+				sendToBack.addActionListener(e -> {
+					mvd.sendViewportToBack(slotIndex);
+				});
+
+				JMenuItem raise = new JMenuItem("Raise");
+				raise.addActionListener(e -> {
+					mvd.raiseViewport(slotIndex);
+				});
+
+				JMenuItem lower = new JMenuItem("Lower");
+				lower.addActionListener(e -> {
+					mvd.lowerViewport(slotIndex);
+				});
+
+				slotMenu.add(bringToFront);
+				slotMenu.add(sendToBack);
+				slotMenu.add(raise);
+				slotMenu.add(lower);
+				layeringMenu.add(slotMenu);
+			}
+			editMenu.add(layeringMenu);
+		}
+
 		editMenu.add(editColorPanel);
 
 		ActionListener menuListener = new ActionListener() {

@@ -13,8 +13,6 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.bytedeco.javacv.VideoInputFrameGrabber;
-
 public class VideoInputDeviceInputComponent extends JPanel {
 	JComboBox<String> videoInputSelector;
 	final JLabel inputLabel;

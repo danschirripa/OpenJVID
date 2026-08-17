@@ -17,7 +17,7 @@ import com.javashell.video.VideoProcessor;
 import com.javashell.video.camera.Camera;
 import com.javashell.video.egressors.LocalWindowEgressor;
 import com.javashell.video.ingestors.NDI5Ingestor;
-import com.javashell.video.ingestors.QOYStreamIngestor;
+import com.javashell.video.ingestors.QOYStreamIngestor_V2;
 
 public class MainTest {
 	public static void main(String[] args)
@@ -35,7 +35,7 @@ public class MainTest {
 		NDI5Ingestor ingest = new NDI5Ingestor(resolution, ndiName);
 
 		Camera IP2M_841 = Camera.getCamera("IP2M-841");
-		QOYStreamIngestor qoyv = new QOYStreamIngestor(resolution, "192.168.0.48", 4500, false);
+		QOYStreamIngestor_V2 qoyv = new QOYStreamIngestor_V2(resolution, "192.168.0.48", 4500, false);
 
 		LocalWindowEgressor preview = new LocalWindowEgressor(resolution, false);
 

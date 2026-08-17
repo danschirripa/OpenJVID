@@ -98,10 +98,16 @@ public class MainUITest {
 			});
 
 		try {
-			while (mf.isVisible()) {
+			while (!Thread.currentThread().isInterrupted()) {
+				if (doShow && !mf.isVisible()) {
+					break;
+				}
 				Thread.sleep(33);
-				mf.repaint();
+				if (doShow)
+					mf.repaint();
 			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

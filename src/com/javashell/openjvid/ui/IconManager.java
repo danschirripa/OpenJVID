@@ -20,12 +20,14 @@ public final class IconManager {
 		// Load all available icon names
 		iconNames = new SortedList<String>();
 		InputStream fileDbStream = IconManager.class.getResourceAsStream("/icons/default_pack/icon.lst");
-		Scanner sc = new Scanner(fileDbStream);
-		while (sc.hasNextLine()) {
-			String nextFileName = sc.nextLine();
-			iconNames.add(nextFileName);
+		if (fileDbStream != null) {
+			Scanner sc = new Scanner(fileDbStream);
+			while (sc.hasNextLine()) {
+				String nextFileName = sc.nextLine();
+				iconNames.add(nextFileName);
+			}
+			sc.close();
 		}
-		sc.close();
 	}
 
 	public static SortedList<String> getIconNames() {
@@ -40,10 +42,20 @@ public final class IconManager {
 			TranscoderInput input = new TranscoderInput();
 			final InputStream iconInputStream = IconManager.class
 					.getResourceAsStream("/icons/default_pack/" + iconName);
+			if (iconInputStream == null) {
+				int w = Math.max(1, Math.round(width));
+				int h = Math.max(1, Math.round(height));
+				return new ImageIcon(new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB));
+			}
 			input.setInputStream(iconInputStream);
 			transcoder.transcode(input, null);
 
 			BufferedImage transOut = transcoder.getFinalImage();
+			if (transOut == null) {
+				int w = Math.max(1, Math.round(width));
+				int h = Math.max(1, Math.round(height));
+				return new ImageIcon(new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB));
+			}
 			BufferedImage finalImage = new BufferedImage(transOut.getWidth(), transOut.getHeight(), transOut.getType());
 			finalImage.createGraphics().drawImage(transOut, 0, 0, null);
 
@@ -51,7 +63,9 @@ public final class IconManager {
 			return icon;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			int w = Math.max(1, Math.round(width));
+			int h = Math.max(1, Math.round(height));
+			return new ImageIcon(new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB));
 		}
 	}
 

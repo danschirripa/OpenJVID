@@ -2,28 +2,27 @@ package com.javashell.openjvid.jnodecomponents;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.UUID;
 
 import com.javashell.openjvid.peripheral.PeripheralDescriptor;
 import com.javashell.openjvid.peripheral.PeripheralDiscoveryService;
 import com.javashell.video.VideoProcessor;
-import com.javashell.video.egressors.QOYStreamEgressor;
-import com.javashell.video.ingestors.QOYStreamIngestor;
+import com.javashell.video.egressors.QOYStreamEgressor_V2;
+import com.javashell.video.ingestors.QOYStreamIngestor_V2;
 
 public class OpenJVIDPeripheral implements VideoProcessor {
 	private final ServerSocket serv;
 	private Socket client;
 	private final UUID sessionID;
-	private QOYStreamEgressor egress;
-	private QOYStreamIngestor ingest;
+	private QOYStreamEgressor_V2 egress;
+	private QOYStreamIngestor_V2 ingest;
 	private BufferedImage previousFrame, receivedFrame;
 	private Thread decoderThread;
 
@@ -34,7 +33,7 @@ public class OpenJVIDPeripheral implements VideoProcessor {
 		serv.bind(new InetSocketAddress(0));
 		sessionID = UUID.randomUUID();
 		client = PeripheralDiscoveryService.negotiatePeripheralCommunications(pd, serv, sessionID);
-		egress = new QOYStreamEgressor();
+		egress = new QOYStreamEgressor_V2();
 	}
 
 	// Used in response to a negotiation request, as the sessionID would have been
@@ -45,25 +44,22 @@ public class OpenJVIDPeripheral implements VideoProcessor {
 		
 		client = new Socket();
 		client.connect(new InetSocketAddress(pd.getInetAddress(), port));
-		ingest = new QOYStreamIngestor();
+		ingest = new QOYStreamIngestor_V2();
 		decoderThread = new Thread(new Runnable() {
 			public void run() {
-				int segmentNumber = 0;
-				byte[][] imageBytes = new byte[12][];
 				while (client.isConnected()) {
 					try {
 						final byte[] intBytes = client.getInputStream().readNBytes(4);
+						if (intBytes.length < 4) {
+							continue;
+						}
 						final int bufSize = ByteBuffer.wrap(intBytes).getInt();
+						if (bufSize <= 0) {
+							continue;
+						}
 
 						final byte[] image = client.getInputStream().readNBytes(bufSize);
-
-						imageBytes[segmentNumber] = image;
-						segmentNumber++;
-
-						if (segmentNumber == 12) {
-							receivedFrame = ingest.convert(imageBytes, 1920, 1080, 12);
-							segmentNumber = 0;
-						}
+						receivedFrame = decodeFrame(image, 1920, 1080);
 
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -77,12 +73,13 @@ public class OpenJVIDPeripheral implements VideoProcessor {
 	public BufferedImage processFrame(BufferedImage frame) {
 		// Piggy back on QOYV processing
 		if (ingest == null) {
-			final byte[][] imageBytes = egress.convertFromBufferedImage(frame, previousFrame, true, 12);
+			if (frame == null) {
+				return previousFrame;
+			}
+			final byte[] imageBytes = egress.convertFromBufferedImage(frame);
 			try {
-				for (int i = 0; i < imageBytes.length; i++) {
-					client.getOutputStream().write(ByteBuffer.allocate(4).putInt(imageBytes[i].length).array());
-					client.getOutputStream().write(imageBytes[i]);
-				}
+				client.getOutputStream().write(ByteBuffer.allocate(4).putInt(imageBytes.length).array());
+				client.getOutputStream().write(imageBytes);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -143,6 +140,17 @@ public class OpenJVIDPeripheral implements VideoProcessor {
 	public Object getProperty(String key) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	private static BufferedImage decodeFrame(byte[] encoded, int width, int height) {
+		BufferedImage decoded = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+		byte[] rgba = new QOYStreamIngestor_V2().decodeQOY(encoded, encoded.length);
+		if (rgba == null) {
+			return decoded;
+		}
+		byte[] target = ((DataBufferByte) decoded.getRaster().getDataBuffer()).getData();
+		System.arraycopy(rgba, 0, target, 0, Math.min(rgba.length, target.length));
+		return decoded;
 	}
 
 }

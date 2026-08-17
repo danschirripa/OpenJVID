@@ -260,10 +260,10 @@ public class IngestNodeFactory {
 	public static jVidNodeComponent<VideoProcessor> createJackAudioClient(
 			@Label(label = "Source Name") JackInputClient sourceName, JNodeFlowPane flowPane) {
 
-		if (FlowController.jackManager.getRegisteredClients().containsKey(sourceName.clientName)) {
+		if (FlowController.getJackManager().getRegisteredClients().containsKey(sourceName.clientName)) {
 
 			AudioInjectorDigestor ajd = new AudioInjectorDigestor("OpenJVID - " + sourceName.clientName,
-					FlowController.jackManager.getRegisteredClients().get(sourceName.clientName),
+					FlowController.getJackManager().getRegisteredClients().get(sourceName.clientName),
 					new Dimension(1920, 1080));
 
 			FlowNode<VideoProcessor> ajdNode = new VideoFlowNode(ajd, null, null);
@@ -294,10 +294,10 @@ public class IngestNodeFactory {
 	public static jVidNodeComponent<VideoProcessor> createJackAudioClient(
 			@Label(label = "Source Name") String sourceName, JNodeFlowPane flowPane) {
 
-		if (FlowController.jackManager.getRegisteredClients().containsKey(sourceName)) {
+		if (FlowController.getJackManager().getRegisteredClients().containsKey(sourceName)) {
 
 			AudioInjectorDigestor ajd = new AudioInjectorDigestor("OpenJVID - " + sourceName,
-					FlowController.jackManager.getRegisteredClients().get(sourceName), new Dimension(1920, 1080));
+					FlowController.getJackManager().getRegisteredClients().get(sourceName), new Dimension(1920, 1080));
 
 			FlowNode<VideoProcessor> ajdNode = new VideoFlowNode(ajd, null, null);
 			jVidNodeComponent<VideoProcessor> ajdNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, ajdNode);

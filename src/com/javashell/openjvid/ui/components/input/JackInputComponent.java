@@ -19,7 +19,7 @@ public class JackInputComponent extends InputComponent<JackInputClient> {
 		JPanel panel = new JPanel();
 		inputLabel = new JLabel(label);
 
-		jackClientSelector = new JComboBox(FlowController.jackManager.getRegisteredClients().keySet().toArray());
+		jackClientSelector = new JComboBox(FlowController.getJackManager().getRegisteredClients().keySet().toArray());
 
 		panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
