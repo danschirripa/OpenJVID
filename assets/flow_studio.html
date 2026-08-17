@@ -1,0 +1,1712 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenJVID Flow Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.js"></script>
+  <style>
+    :root {
+      --bg-0: #f4f6f8;
+      --bg-1: #ffffff;
+      --bg-2: #ebeff3;
+      --ink-0: #0e1c2f;
+      --ink-1: #36506d;
+      --accent-0: #e85d04;
+      --accent-1: #2a9d8f;
+      --warn: #b35c00;
+      --ok: #166534;
+      --err: #a5162c;
+      --line: #d0dae4;
+      --shadow: 0 14px 36px rgba(36, 59, 83, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink-0);
+      font-family: "Space Grotesk", sans-serif;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(232, 93, 4, 0.14), transparent 42%),
+        radial-gradient(circle at 88% 5%, rgba(42, 157, 143, 0.18), transparent 40%),
+        linear-gradient(120deg, #f5f8fc 0%, #eef4fa 56%, #f8fafc 100%);
+    }
+
+    .app {
+      padding: 16px;
+      display: none;
+      gap: 14px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      animation: rise-in .45s ease;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.02em;
+    }
+
+    .title-wrap p {
+      margin: 3px 0 0;
+      color: var(--ink-1);
+      font-size: 0.9rem;
+    }
+
+    .status-pill {
+      font-family: "IBM Plex Mono", monospace;
+      border-radius: 999px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      background: var(--bg-1);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .status-pill.ok { color: var(--ok); border-color: #9ad3b6; background: #eefcf4; }
+    .status-pill.err { color: var(--err); border-color: #f0adb8; background: #fff1f4; }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 310px 1fr 340px;
+      min-height: calc(100vh - 120px);
+    }
+
+    .panel {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: rise-in .55s ease;
+    }
+
+    .panel.graph-panel {
+      min-height: 0;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    .stack { display: grid; gap: 10px; }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .param-shell {
+      display: grid;
+      gap: 10px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .param-card {
+      border: 1px solid #d5dee8;
+      border-radius: 12px;
+      background: #fbfdff;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .param-card header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .param-card .param-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .param-card .param-type {
+      font-size: 11px;
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--ink-1);
+      text-align: right;
+    }
+
+    .param-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .param-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .param-note {
+      font-size: 11px;
+      color: var(--ink-1);
+      line-height: 1.4;
+    }
+
+    details.advanced-json {
+      border: 1px dashed #cbd7e5;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #f7fbff;
+    }
+
+    details.advanced-json summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--ink-1);
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--ink-1);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #c7d5e5;
+      border-radius: 9px;
+      padding: 8px 10px;
+      font-family: inherit;
+      color: var(--ink-0);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    button {
+      border: 1px solid #c6d4e6;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--ink-0);
+      background: #f5f9fd;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 16px rgba(12, 29, 53, 0.15);
+    }
+
+    .primary {
+      border-color: #da6700;
+      background: linear-gradient(160deg, #ff8b2e, #e85d04);
+      color: #fff;
+    }
+
+    .safe {
+      border-color: #6fc5b9;
+      background: linear-gradient(160deg, #56c7b8, #239a8b);
+      color: #fff;
+    }
+
+    .danger {
+      border-color: #dc8f9f;
+      background: #fff2f5;
+      color: #8c1d33;
+    }
+
+    #graph {
+      width: 100%;
+      height: min(72vh, 720px);
+      min-height: 560px;
+      border-radius: 10px;
+      border: 1px solid #d4dde7;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(232, 93, 4, 0.08), transparent 55%),
+        linear-gradient(0deg, #fbfdff, #f2f6fb);
+    }
+
+    .mv-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 19, 34, 0.58);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .mv-modal.open {
+      display: flex;
+    }
+
+    .mv-dialog {
+      width: min(1180px, 100%);
+      max-height: 92vh;
+      background: #fff;
+      border: 1px solid #cfdcea;
+      border-radius: 14px;
+      box-shadow: 0 24px 48px rgba(7, 23, 40, 0.3);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+
+    .mv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #deE7f0;
+      background: linear-gradient(180deg, #f8fbff, #f2f7fc);
+    }
+
+    .mv-header h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .mv-content {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .mv-stage-wrap {
+      border: 1px solid #d7e1ec;
+      border-radius: 12px;
+      background: #f7fbff;
+      padding: 10px;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mv-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 1px dashed #b4c4d8;
+      border-radius: 10px;
+      background:
+        linear-gradient(90deg, rgba(124, 152, 183, 0.16) 1px, transparent 1px) 0 0 / 8% 100%,
+        linear-gradient(0deg, rgba(124, 152, 183, 0.16) 1px, transparent 1px) 0 0 / 100% 8%,
+        linear-gradient(180deg, #f9fcff, #eef4fa);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .mv-slot {
+      position: absolute;
+      border: 2px solid #2a6fba;
+      background: rgba(65, 136, 210, 0.22);
+      border-radius: 6px;
+      min-width: 14px;
+      min-height: 14px;
+      cursor: move;
+      overflow: hidden;
+    }
+
+    .mv-slot.active {
+      border-color: #e85d04;
+      background: rgba(232, 93, 4, 0.24);
+      box-shadow: 0 0 0 2px rgba(255, 158, 64, 0.4);
+    }
+
+    .mv-slot-label {
+      position: absolute;
+      inset: 0 auto auto 0;
+      font-size: 11px;
+      padding: 2px 6px;
+      font-family: "IBM Plex Mono", monospace;
+      background: rgba(11, 35, 61, 0.84);
+      color: #fff;
+    }
+
+    .mv-slot-handle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: rgba(11, 35, 61, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .mv-slot-handle.nw {
+      left: 0;
+      top: 0;
+      cursor: nwse-resize;
+    }
+
+    .mv-slot-handle.ne {
+      right: 0;
+      top: 0;
+      cursor: nesw-resize;
+    }
+
+    .mv-slot-handle.sw {
+      left: 0;
+      bottom: 0;
+      cursor: nesw-resize;
+    }
+
+    .mv-slot-handle.se {
+      right: 0;
+      bottom: 0;
+      cursor: nwse-resize;
+    }
+
+    .mv-sidebar {
+      border: 1px solid #d7e1ec;
+      border-radius: 12px;
+      background: #fbfdff;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .mv-slot-row {
+      border: 1px solid #d9e3ef;
+      border-radius: 10px;
+      padding: 8px;
+      background: #fff;
+      display: grid;
+      gap: 6px;
+    }
+
+    .mv-slot-row.active {
+      border-color: #e7a774;
+      box-shadow: inset 0 0 0 1px rgba(232, 93, 4, 0.3);
+    }
+
+    .mv-slot-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .mv-z-input {
+      width: 74px;
+    }
+
+    .mv-footer {
+      border-top: 1px solid #deE7f0;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: #f6fafe;
+    }
+
+    .mv-hint {
+      font-size: 12px;
+      color: var(--ink-1);
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 6px;
+      font-size: 13px;
+      border-bottom: 1px solid #ebf0f4;
+      padding: 6px 0;
+    }
+
+    .metric kbd {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      background: #f1f5fa;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+
+    .meta {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--ink-1);
+      font-family: "IBM Plex Mono", monospace;
+      white-space: pre-wrap;
+      max-height: 160px;
+      overflow: auto;
+      border-top: 1px dashed #d5dee8;
+      padding-top: 8px;
+    }
+
+    .login {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+
+    .login-card {
+      width: min(420px, 100%);
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      animation: rise-in .5s ease;
+    }
+
+    .login-card h1 {
+      margin: 0 0 6px;
+      font-size: 1.25rem;
+    }
+
+    .login-card p {
+      margin: 0 0 12px;
+      color: var(--ink-1);
+      font-size: 0.92rem;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--warn);
+      margin-top: 8px;
+      line-height: 1.45;
+    }
+
+    .chip {
+      display: inline-block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: #f1f6fc;
+      border: 1px solid #d3dfec;
+      margin-right: 6px;
+      margin-top: 4px;
+    }
+
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: 300px 1fr; }
+      .panel.health { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      #graph { min-height: 420px; }
+      .topbar { grid-template-columns: 1fr; }
+      .mv-content { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <section class="login" id="loginView">
+    <div class="login-card">
+      <h1>OpenJVID Flow Studio</h1>
+      <p>Browser control plane for graph editing, node creation, and runtime health.</p>
+      <div class="stack">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" autocomplete="username" placeholder="admin" />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="openjvid" />
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="primary" id="loginBtn">Sign In</button>
+      </div>
+      <div class="hint" id="loginError"></div>
+      <div class="hint">Tip: this login gate is UI-side only. For production security, place this behind a real auth proxy (OIDC, reverse proxy auth, or VPN) and restrict host access.</div>
+    </div>
+  </section>
+
+  <main class="app" id="appView">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>OpenJVID Flow Studio</h1>
+        <p>Create nodes, wire linkages, control transport, inspect health, and manage active topology.</p>
+      </div>
+      <div class="btn-row">
+        <div class="status-pill" id="connectivityPill">Disconnected</div>
+        <button id="refreshBtn">Refresh</button>
+        <button id="logoutBtn" class="danger">Logout</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Create Node</h2>
+        <div class="stack">
+          <div class="field">
+            <label for="nodeTypeSelect">Node Type</label>
+            <select id="nodeTypeSelect"></select>
+          </div>
+          <div class="field">
+            <label>Parameters</label>
+            <div id="paramForm" class="param-shell"></div>
+            <div class="hint" id="paramHint">Select a node type to load its parameter form.</div>
+          </div>
+          <details class="advanced-json">
+            <summary>Advanced JSON</summary>
+            <div class="field" style="margin-top:8px;">
+              <label for="paramEditor">ParameterList JSON preview</label>
+              <textarea id="paramEditor" spellcheck="false" readonly>{
+  "Name": ["Web Node"]
+}</textarea>
+            </div>
+          </details>
+          <div class="btn-row">
+            <button class="safe" id="createNodeBtn">Create Node</button>
+            <button id="loadTemplateBtn">Load Template</button>
+          </div>
+        </div>
+
+        <h2 style="margin-top:14px;">Linkages</h2>
+        <div class="stack">
+          <div class="field">
+            <label for="originSelect">Origin</label>
+            <select id="originSelect"></select>
+          </div>
+          <div class="field">
+            <label for="targetSelect">Target</label>
+            <select id="targetSelect"></select>
+          </div>
+          <div class="btn-row">
+            <button class="safe" id="createLinkBtn">Create Link</button>
+            <button class="danger" id="removeLinkBtn">Remove Link</button>
+          </div>
+          <div class="hint">Hint: select two nodes then create/remove linkage. You can also use graph selection to auto-fill these fields.</div>
+        </div>
+      </section>
+
+      <section class="panel graph-panel">
+        <h2>Flow Graph</h2>
+        <div id="graph"></div>
+        <div class="meta" id="selectionMeta">Selection: none</div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button id="editMultiviewBtn" disabled>Edit Multiview Layout</button>
+        </div>
+      </section>
+
+      <section class="panel health">
+        <h2>System Health</h2>
+        <div id="healthMetrics"></div>
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="safe" id="playBtn">Resume Flow</button>
+          <button class="danger" id="pauseBtn">Pause Flow</button>
+        </div>
+
+        <h2 style="margin-top:14px;">Quick Access</h2>
+        <div>
+          <span class="chip">API: /api/status</span>
+          <span class="chip">Graph: /api/nodes/linkages</span>
+          <span class="chip">Nodes: /api/nodes/active</span>
+          <span class="chip">Legacy: /rest_console</span>
+        </div>
+
+        <h2 style="margin-top:14px;">Event Log</h2>
+        <div class="meta" id="eventLog"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="mv-modal" id="multiviewModal">
+    <div class="mv-dialog">
+      <div class="mv-header">
+        <h3 id="mvModalTitle">Multiview Layout Editor</h3>
+        <button id="mvCloseBtn" class="danger">Close</button>
+      </div>
+      <div class="mv-content">
+        <div class="mv-stage-wrap">
+          <div class="mv-hint">Drag slots to reposition. Drag any corner handle to resize. Use Keep Aspect Ratio to lock proportions.</div>
+          <div id="mvStage" class="mv-stage"></div>
+        </div>
+        <div class="mv-sidebar" id="mvSidebar"></div>
+      </div>
+      <div class="mv-footer">
+        <div class="btn-row">
+          <button id="mvAspectBtn">Keep Aspect Ratio: On</button>
+          <button id="mvNormalizeZBtn">Normalize Z Order</button>
+          <button id="mvApplyBtn" class="safe">Apply Layout</button>
+        </div>
+        <div class="mv-hint" id="mvStatusText">No slot selected.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const AUTH_KEY = "openjvid-flow-auth";
+    const LOGIN_USER = "admin";
+    const LOGIN_PASS = "openjvid";
+
+    const state = {
+      nodesById: {},
+      linkages: {},
+      nodeTypes: [],
+      nodeDetailsCache: {},
+      nodeParameters: [],
+      activeNodeType: "",
+      multiviewNodes: {},
+      multiviewEditor: null,
+      graphNodePositions: {},
+      hasGraphInitialFit: false,
+      isRenderingGraph: false,
+      graph: null,
+      graphData: null,
+      selectedNodeId: null,
+      selectedEdge: null,
+      health: null
+    };
+
+    const els = {
+      loginView: document.getElementById("loginView"),
+      appView: document.getElementById("appView"),
+      loginError: document.getElementById("loginError"),
+      username: document.getElementById("username"),
+      password: document.getElementById("password"),
+      loginBtn: document.getElementById("loginBtn"),
+      logoutBtn: document.getElementById("logoutBtn"),
+      connectivityPill: document.getElementById("connectivityPill"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      editMultiviewBtn: document.getElementById("editMultiviewBtn"),
+      nodeTypeSelect: document.getElementById("nodeTypeSelect"),
+      paramForm: document.getElementById("paramForm"),
+      paramHint: document.getElementById("paramHint"),
+      paramEditor: document.getElementById("paramEditor"),
+      createNodeBtn: document.getElementById("createNodeBtn"),
+      loadTemplateBtn: document.getElementById("loadTemplateBtn"),
+      originSelect: document.getElementById("originSelect"),
+      targetSelect: document.getElementById("targetSelect"),
+      createLinkBtn: document.getElementById("createLinkBtn"),
+      removeLinkBtn: document.getElementById("removeLinkBtn"),
+      healthMetrics: document.getElementById("healthMetrics"),
+      playBtn: document.getElementById("playBtn"),
+      pauseBtn: document.getElementById("pauseBtn"),
+      eventLog: document.getElementById("eventLog"),
+      selectionMeta: document.getElementById("selectionMeta"),
+      multiviewModal: document.getElementById("multiviewModal"),
+      mvModalTitle: document.getElementById("mvModalTitle"),
+      mvCloseBtn: document.getElementById("mvCloseBtn"),
+      mvStage: document.getElementById("mvStage"),
+      mvSidebar: document.getElementById("mvSidebar"),
+      mvAspectBtn: document.getElementById("mvAspectBtn"),
+      mvNormalizeZBtn: document.getElementById("mvNormalizeZBtn"),
+      mvApplyBtn: document.getElementById("mvApplyBtn"),
+      mvStatusText: document.getElementById("mvStatusText")
+    };
+
+    function log(msg){
+      const ts = new Date().toLocaleTimeString();
+      const line = `[${ts}] ${msg}`;
+      const cur = els.eventLog.textContent || "";
+      els.eventLog.textContent = `${line}\n${cur}`.trim();
+    }
+
+    async function api(path, options = {}) {
+      const opts = Object.assign({ headers: {} }, options);
+      if (opts.body && typeof opts.body !== "string") {
+        opts.body = JSON.stringify(opts.body);
+        opts.headers["Content-Type"] = "application/json";
+      }
+      const resp = await fetch(path, opts);
+      const text = await resp.text();
+      let parsed = null;
+      if (text) {
+        try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+      }
+      if (!resp.ok) {
+        const err = new Error(`HTTP ${resp.status}`);
+        err.status = resp.status;
+        err.body = parsed;
+        throw err;
+      }
+      return parsed;
+    }
+
+    function setConnectivity(ok, message){
+      els.connectivityPill.textContent = message;
+      els.connectivityPill.className = "status-pill " + (ok ? "ok" : "err");
+    }
+
+    function showApp(show){
+      els.loginView.style.display = show ? "none" : "grid";
+      els.appView.style.display = show ? "grid" : "none";
+    }
+
+    function authValid(){
+      return window.localStorage.getItem(AUTH_KEY) === "1";
+    }
+
+    function nodeLabel(id, node){
+      const name = node && node.name ? node.name : "Unknown";
+      const type = node && node.type ? node.type : "Unknown";
+      return `${name}\n(${type})\n${id.slice(0,8)}`;
+    }
+
+    function isMultiviewNode(node){
+      if (!node) return false;
+      return !!state.multiviewNodes[node && node._id];
+    }
+
+    function getCurrentMultiviewNodeId(){
+      if (state.selectedNodeId && isMultiviewNode(state.nodesById[state.selectedNodeId])) {
+        return state.selectedNodeId;
+      }
+      const originId = els.originSelect.value;
+      if (originId && isMultiviewNode(state.nodesById[originId])) {
+        return originId;
+      }
+      const mvIds = Object.keys(state.multiviewNodes || {});
+      if (mvIds.length === 1) {
+        return mvIds[0];
+      }
+      return null;
+    }
+
+    function updateMultiviewButton(){
+      const enabled = !!getCurrentMultiviewNodeId();
+      els.editMultiviewBtn.disabled = !enabled;
+      els.editMultiviewBtn.title = enabled ? "Edit selected multiview layout" : "Select a multiview node to edit layout";
+    }
+
+    function populateNodeSelectors(){
+      const ids = Object.keys(state.nodesById);
+      const options = ids.map(id => `<option value="${id}">${state.nodesById[id].name} (${id.slice(0,8)})</option>`).join("");
+      els.originSelect.innerHTML = options;
+      els.targetSelect.innerHTML = options;
+    }
+
+    function populateNodeTypes(){
+      const selectedValue = els.nodeTypeSelect.value || state.activeNodeType || "";
+      const options = state.nodeTypes.map(t => `<option value="${t}">${t}</option>`).join("");
+      els.nodeTypeSelect.innerHTML = options;
+      if (selectedValue && state.nodeTypes.includes(selectedValue)) {
+        els.nodeTypeSelect.value = selectedValue;
+      } else if (state.nodeTypes.length > 0) {
+        els.nodeTypeSelect.value = state.nodeTypes[0];
+      }
+      state.activeNodeType = els.nodeTypeSelect.value || "";
+    }
+
+    function normalizeParameterType(typeName){
+      if (!typeName) return "string";
+      const lowered = String(typeName).toLowerCase();
+      if (lowered.includes("dimension")) return "dimension";
+      if (lowered.includes("testpattern")) return "testpattern";
+      if (lowered.includes("videocodec")) return "videocodec";
+      if (lowered.includes("jackinputclient")) return "jackinputclient";
+      if (lowered.includes("peripheraldescriptor")) return "peripheraldescriptor";
+      if (lowered.includes("url")) return "url";
+      if (lowered.includes("file")) return "file";
+      if (lowered === "int" || lowered.endsWith(".integer")) return "int";
+      if (lowered === "float" || lowered.endsWith(".float") || lowered === "double" || lowered.endsWith(".double")) return "float";
+      return "string";
+    }
+
+    function getEnumOptions(normalizedType){
+      if (normalizedType === "testpattern") {
+        return ["SMPTE_COLORBARS", "LINEAR_ACCURACY", "HD_TEST", "UHD_TEST", "BBB_SUNFLOWER"];
+      }
+      if (normalizedType === "videocodec") {
+        return ["HEVC", "H264", "MJPEG", "AV1", "VP9"];
+      }
+      return [];
+    }
+
+    function buildNodeDetailsPayload(raw){
+      if (!raw) return [];
+      if (Array.isArray(raw.Parameters)) {
+        return raw.Parameters.slice().sort((a, b) => (a.Index ?? 0) - (b.Index ?? 0));
+      }
+      const details = [];
+      Object.keys(raw).forEach(key => {
+        if (key === "Count" || key === "Parameters") return;
+        details.push({ Label: key, Type: raw[key] });
+      });
+      return details;
+    }
+
+    function syncAdvancedPreview(){
+      if (!els.paramEditor) return;
+      const payload = collectNodeParameters();
+      els.paramEditor.value = JSON.stringify(payload, null, 2);
+    }
+
+    function createFieldElement(descriptor, index){
+      const normalizedType = normalizeParameterType(descriptor.Type);
+      const label = descriptor.Label || `Param ${index + 1}`;
+      const card = document.createElement("div");
+      card.className = "param-card";
+
+      const header = document.createElement("header");
+      const title = document.createElement("div");
+      title.className = "param-name";
+      title.textContent = label;
+      const type = document.createElement("div");
+      type.className = "param-type";
+      type.textContent = descriptor.Type || "string";
+      header.appendChild(title);
+      header.appendChild(type);
+      card.appendChild(header);
+
+      const grid = document.createElement("div");
+      grid.className = "param-grid";
+      const entry = { label, type: normalizedType, descriptor };
+
+      function attachChangeHandlers(inputs){
+        inputs.forEach(input => {
+          input.addEventListener("input", syncAdvancedPreview);
+          input.addEventListener("change", syncAdvancedPreview);
+        });
+      }
+
+      if (normalizedType === "dimension") {
+        const row = document.createElement("div");
+        row.className = "param-row";
+        const widthInput = document.createElement("input");
+        widthInput.type = "number";
+        widthInput.placeholder = "Width";
+        widthInput.value = 1280;
+        const heightInput = document.createElement("input");
+        heightInput.type = "number";
+        heightInput.placeholder = "Height";
+        heightInput.value = 720;
+        row.appendChild(widthInput);
+        row.appendChild(heightInput);
+        grid.appendChild(row);
+        entry.inputs = [widthInput, heightInput];
+        attachChangeHandlers(entry.inputs);
+      } else if (getEnumOptions(normalizedType).length > 0) {
+        const select = document.createElement("select");
+        getEnumOptions(normalizedType).forEach(optionValue => {
+          const option = document.createElement("option");
+          option.value = optionValue;
+          option.textContent = optionValue;
+          select.appendChild(option);
+        });
+        grid.appendChild(select);
+        entry.inputs = [select];
+        attachChangeHandlers(entry.inputs);
+      } else if (normalizedType === "int" || normalizedType === "float") {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = normalizedType === "int" ? "1" : "any";
+        input.placeholder = normalizedType === "int" ? "0" : "0.0";
+        grid.appendChild(input);
+        entry.inputs = [input];
+        attachChangeHandlers(entry.inputs);
+      } else {
+        const input = document.createElement("input");
+        input.type = normalizedType === "url" ? "url" : "text";
+        input.placeholder = normalizedType === "file" ? "/path/to/file" : label;
+        grid.appendChild(input);
+        entry.inputs = [input];
+        attachChangeHandlers(entry.inputs);
+      }
+
+      const note = document.createElement("div");
+      note.className = "param-note";
+      if (normalizedType === "dimension") {
+        note.textContent = "Sent as [width, height].";
+      } else if (normalizedType === "testpattern") {
+        note.textContent = "Select one of the built-in test patterns.";
+      } else if (normalizedType === "videocodec") {
+        note.textContent = "Select the video codec profile.";
+      } else if (normalizedType === "jackinputclient") {
+        note.textContent = "Enter the JACK client name.";
+      } else if (normalizedType === "peripheraldescriptor") {
+        note.textContent = "Enter the discovered peripheral key or address.";
+      }
+      card.appendChild(grid);
+      card.appendChild(note);
+      card._entry = entry;
+      return card;
+    }
+
+    function renderNodeForm(details){
+      state.nodeParameters = details || [];
+      els.paramForm.innerHTML = "";
+      if (!state.nodeParameters.length) {
+        els.paramHint.textContent = "This node type does not expose configurable parameters.";
+        syncAdvancedPreview();
+        return;
+      }
+      els.paramHint.textContent = `${state.nodeParameters.length} parameter${state.nodeParameters.length === 1 ? "" : "s"} detected.`;
+      state.nodeParameters.forEach((descriptor, index) => {
+        els.paramForm.appendChild(createFieldElement(descriptor, index));
+      });
+      syncAdvancedPreview();
+    }
+
+    async function loadNodeDetails(nodeType){
+      if (!nodeType) {
+        renderNodeForm([]);
+        state.activeNodeType = "";
+        return;
+      }
+      state.activeNodeType = nodeType;
+      if (state.nodeDetailsCache[nodeType]) {
+        renderNodeForm(state.nodeDetailsCache[nodeType]);
+        return;
+      }
+      try {
+        const details = await api("/api/nodes/details", {
+          method: "POST",
+          headers: { "X-HTTP-Method-Override": "GET" },
+          body: { Name: nodeType }
+        });
+        const normalized = buildNodeDetailsPayload(details);
+        state.nodeDetailsCache[nodeType] = normalized;
+        renderNodeForm(normalized);
+      } catch (err) {
+        renderNodeForm([]);
+        els.paramHint.textContent = `Unable to load parameters for ${nodeType}: ${err.message}`;
+      }
+    }
+
+    function collectNodeParameters(){
+      const parameterList = {};
+      const cards = Array.from(els.paramForm.querySelectorAll(".param-card"));
+      for (const card of cards) {
+        const entry = card._entry;
+        const inputs = entry.inputs || [];
+        if (entry.type === "dimension") {
+          parameterList[entry.label] = [Number(inputs[0].value), Number(inputs[1].value)];
+        } else {
+          parameterList[entry.label] = [inputs[0].value];
+        }
+      }
+      return parameterList;
+    }
+
+    function renderHealth(){
+      const s = state.health || {};
+      const metrics = [
+        ["IsPlaying", String(!!s.IsPlaying)],
+        ["JackCapable", String(!!s.JackCapable)],
+        ["Framerate", String(s.Framerate ?? "n/a")],
+        ["FrameDelta", String(s.FrameDelta ?? "n/a")],
+        ["NodeCount", String(Object.keys(state.nodesById).length)],
+        ["LinkOriginCount", String(Object.keys(state.linkages).length)]
+      ];
+      els.healthMetrics.innerHTML = metrics.map(m => `<div class="metric"><strong>${m[0]}</strong><kbd>${m[1]}</kbd></div>`).join("");
+    }
+
+    function edgeId(from, to){ return `${from}=>${to}`; }
+
+    function ensureGraph(){
+      if (state.graph) return;
+      const nodes = new vis.DataSet([]);
+      const edges = new vis.DataSet([]);
+      state.graphData = { nodes, edges };
+      state.graph = new vis.Network(document.getElementById("graph"), state.graphData, {
+        nodes: {
+          shape: "box",
+          borderWidth: 1,
+          color: {
+            border: "#3d5f84",
+            background: "#f8fbff",
+            highlight: { border: "#d95b00", background: "#fff4eb" }
+          },
+          font: { face: "Space Grotesk", size: 13, color: "#11253f" },
+          margin: 10
+        },
+        edges: {
+          arrows: "to",
+          smooth: { type: "dynamic" },
+          color: { color: "#7993af", highlight: "#d95b00" },
+          width: 2
+        },
+        layout: { improvedLayout: true },
+        interaction: { hover: true, multiselect: false },
+        physics: false
+      });
+
+      state.graph.on("selectNode", ev => {
+        const id = ev.nodes && ev.nodes[0];
+        if (!id) return;
+        state.selectedNodeId = id;
+        els.originSelect.value = id;
+        const node = state.nodesById[id];
+        els.selectionMeta.textContent = `Selected node\nID: ${id}\nName: ${node ? node.name : "n/a"}\nType: ${node ? node.type : "n/a"}\nContentClass: ${node ? (node.contentClass || "n/a") : "n/a"}`;
+        updateMultiviewButton();
+      });
+
+      state.graph.on("selectEdge", ev => {
+        const id = ev.edges && ev.edges[0];
+        if (!id) return;
+        state.selectedNodeId = null;
+        const parts = id.split("=>");
+        if (parts.length === 2) {
+          els.originSelect.value = parts[0];
+          els.targetSelect.value = parts[1];
+        }
+        els.selectionMeta.textContent = `Selected edge\n${id}`;
+        updateMultiviewButton();
+      });
+
+      state.graph.on("deselectNode", () => {
+        if (state.isRenderingGraph)
+          return;
+        state.selectedNodeId = null;
+        updateMultiviewButton();
+      });
+
+      state.graph.on("dragEnd", () => {
+        try {
+          const ids = Object.keys(state.nodesById || {});
+          if (!ids.length) return;
+          const positions = state.graph.getPositions(ids);
+          Object.keys(positions).forEach(id => {
+            state.graphNodePositions[id] = {
+              x: positions[id].x,
+              y: positions[id].y
+            };
+          });
+        } catch (_) {
+          // ignore transient position capture errors
+        }
+      });
+    }
+
+    function renderGraph(){
+      ensureGraph();
+      state.isRenderingGraph = true;
+      try {
+        const existingIds = state.graphData.nodes.getIds();
+        if (existingIds && existingIds.length > 0) {
+          const positions = state.graph.getPositions(existingIds);
+          Object.keys(positions).forEach(id => {
+            state.graphNodePositions[id] = {
+              x: positions[id].x,
+              y: positions[id].y
+            };
+          });
+        }
+      } catch (_) {
+        // ignore position capture errors between dataset rebuilds
+      }
+
+      const nodeEntries = Object.entries(state.nodesById);
+      const nodeRecords = nodeEntries.map(([id, node], idx) => {
+        const saved = state.graphNodePositions[id];
+        const fallbackX = (idx % 5) * 190;
+        const fallbackY = Math.floor(idx / 5) * 130;
+        return {
+          id,
+          label: nodeLabel(id, node),
+          title: `${node.name} (${node.type})`,
+          group: node.type,
+          x: saved ? saved.x : fallbackX,
+          y: saved ? saved.y : fallbackY
+        };
+      });
+      const edgeRecords = [];
+      Object.entries(state.linkages).forEach(([origin, targets]) => {
+        if (!Array.isArray(targets)) return;
+        targets.forEach(target => {
+          edgeRecords.push({ id: edgeId(origin, target), from: origin, to: target });
+        });
+      });
+      state.graphData.nodes.clear();
+      state.graphData.nodes.add(nodeRecords);
+      state.graphData.edges.clear();
+      state.graphData.edges.add(edgeRecords);
+
+      if (state.selectedNodeId && state.nodesById[state.selectedNodeId]) {
+        state.graph.selectNodes([state.selectedNodeId]);
+      }
+
+      requestAnimationFrame(() => {
+        if (state.graph && !state.hasGraphInitialFit) {
+          state.graph.fit({ animation: false });
+          state.hasGraphInitialFit = true;
+        }
+        state.isRenderingGraph = false;
+      });
+    }
+
+    async function refreshAll(){
+      try {
+        const selectedBeforeRefresh = els.nodeTypeSelect.value || state.activeNodeType || "";
+        const [status, nodes, linkages, available, multiview] = await Promise.all([
+          api("/api/status"),
+          api("/api/nodes/active"),
+          api("/api/nodes/linkages"),
+          api("/api/nodes/listAvailable"),
+          api("/api/nodes/multiview").catch(() => ({ Count: 0, Nodes: {} }))
+        ]);
+        state.health = status || {};
+        state.nodesById = nodes || {};
+        Object.keys(state.nodesById).forEach(id => {
+          state.nodesById[id]._id = id;
+        });
+        state.linkages = linkages || {};
+        state.nodeTypes = (available && available.AvailableNodes) ? available.AvailableNodes : [];
+        state.multiviewNodes = (multiview && multiview.Nodes) ? multiview.Nodes : {};
+        populateNodeSelectors();
+        populateNodeTypes();
+        if (selectedBeforeRefresh && state.nodeTypes.includes(selectedBeforeRefresh)) {
+          els.nodeTypeSelect.value = selectedBeforeRefresh;
+          state.activeNodeType = selectedBeforeRefresh;
+        }
+        if (state.selectedNodeId && !state.nodesById[state.selectedNodeId]) {
+          state.selectedNodeId = null;
+        }
+        updateMultiviewButton();
+        renderHealth();
+        renderGraph();
+        setConnectivity(true, "Connected :2424");
+      } catch (err) {
+        setConnectivity(false, `Error ${err.status || "n/a"}`);
+        log(`Refresh failed: ${err.message}`);
+      }
+    }
+
+    function inferTemplate(nodeType){
+      const template = { Name: ["Web Node"] };
+      const details = state.nodeDetailsCache[nodeType] || [];
+      details.forEach(descriptor => {
+        const normalized = normalizeParameterType(descriptor.Type);
+        if (normalized === "dimension") {
+          template[descriptor.Label] = [1280, 720];
+        } else if (normalized === "testpattern") {
+          template[descriptor.Label] = ["SMPTE_COLORBARS"];
+        } else if (normalized === "videocodec") {
+          template[descriptor.Label] = ["H264"];
+        } else if (normalized === "int") {
+          template[descriptor.Label] = [1];
+        } else if (normalized === "float") {
+          template[descriptor.Label] = [1.0];
+        } else {
+          template[descriptor.Label] = ["Web Node"];
+        }
+      });
+      return template;
+    }
+
+    async function createNode(){
+      try {
+        const nodeType = els.nodeTypeSelect.value;
+        if (!nodeType) {
+          log("No node type selected");
+          return;
+        }
+        const paramJson = collectNodeParameters();
+        await api("/api/nodes/create", {
+          method: "POST",
+          body: {
+            NodeType: nodeType,
+            ParameterList: paramJson
+          }
+        });
+        log(`Node created: ${nodeType}`);
+        await refreshAll();
+      } catch (err) {
+        log(`Create node failed: ${err.message}`);
+      }
+    }
+
+    async function createLink(){
+      const origin = els.originSelect.value;
+      const target = els.targetSelect.value;
+      if (!origin || !target) {
+        log("Origin/target must be selected");
+        return;
+      }
+      try {
+        await api("/api/nodes/linkages", {
+          method: "POST",
+          body: { Origin: origin, Target: target }
+        });
+        log(`Link created ${origin.slice(0,8)} -> ${target.slice(0,8)}`);
+        await refreshAll();
+      } catch (err) {
+        log(`Create link failed: ${err.message}`);
+      }
+    }
+
+    async function removeLink(){
+      const origin = els.originSelect.value;
+      const target = els.targetSelect.value;
+      if (!origin || !target) {
+        log("Origin/target must be selected");
+        return;
+      }
+      try {
+        await api("/api/nodes/linkages", {
+          method: "DELETE",
+          body: { Origin: origin, Target: target }
+        });
+        log(`Link removed ${origin.slice(0,8)} -> ${target.slice(0,8)}`);
+        await refreshAll();
+      } catch (err) {
+        log(`Remove link failed: ${err.message}`);
+      }
+    }
+
+    async function setTransport(isPlaying){
+      try {
+        await api("/api/transport", { method: "POST", body: { IsPlaying: isPlaying } });
+        log(isPlaying ? "Flow resumed" : "Flow paused");
+        await refreshAll();
+      } catch (err) {
+        log(`Transport update failed: ${err.message}`);
+      }
+    }
+
+    function buildMultiviewEditorState(multiviewState){
+      const slots = (multiviewState.Slots || []).map((slot, idx) => ({
+        Index: slot.Index ?? idx,
+        X: Number(slot.X ?? 0),
+        Y: Number(slot.Y ?? 0),
+        Width: Number(slot.Width ?? 1),
+        Height: Number(slot.Height ?? 1),
+        Z: Number(slot.Z ?? 0)
+      }));
+      let maxX = 1;
+      let maxY = 1;
+      slots.forEach(slot => {
+        maxX = Math.max(maxX, slot.X + slot.Width);
+        maxY = Math.max(maxY, slot.Y + slot.Height);
+      });
+      const requestedW = Number(multiviewState.ResolutionWidth || 0);
+      const requestedH = Number(multiviewState.ResolutionHeight || 0);
+      const baseWidth = Math.max(1, requestedW, Math.ceil(maxX));
+      const baseHeight = Math.max(1, requestedH, Math.ceil(maxY));
+      return {
+        nodeId: multiviewState.Node,
+        name: multiviewState.Name,
+        baseWidth,
+        baseHeight,
+        slots,
+        selectedSlotIndex: slots.length ? slots[0].Index : null,
+        keepAspectRatio: true,
+        drag: null
+      };
+    }
+
+    function getSlotByIndex(index){
+      if (!state.multiviewEditor) return null;
+      return state.multiviewEditor.slots.find(slot => slot.Index === index) || null;
+    }
+
+    function normalizeZOrder(){
+      if (!state.multiviewEditor) return;
+      const sorted = [...state.multiviewEditor.slots].sort((a, b) => a.Z - b.Z);
+      sorted.forEach((slot, idx) => {
+        slot.Z = idx;
+      });
+    }
+
+    function updateMvStatus(){
+      if (!state.multiviewEditor) {
+        els.mvStatusText.textContent = "No slot selected.";
+        return;
+      }
+      const slot = getSlotByIndex(state.multiviewEditor.selectedSlotIndex);
+      if (!slot) {
+        els.mvStatusText.textContent = "No slot selected.";
+        return;
+      }
+      els.mvStatusText.textContent = `Slot ${slot.Index} | X:${Math.round(slot.X)} Y:${Math.round(slot.Y)} W:${Math.round(slot.Width)} H:${Math.round(slot.Height)} Z:${slot.Z} | Aspect:${state.multiviewEditor.keepAspectRatio ? "On" : "Off"}`;
+    }
+
+    function updateAspectButton(){
+      if (!state.multiviewEditor) {
+        els.mvAspectBtn.textContent = "Keep Aspect Ratio: On";
+        return;
+      }
+      els.mvAspectBtn.textContent = `Keep Aspect Ratio: ${state.multiviewEditor.keepAspectRatio ? "On" : "Off"}`;
+    }
+
+    function renderMultiviewSidebar(){
+      if (!state.multiviewEditor) {
+        els.mvSidebar.innerHTML = "";
+        return;
+      }
+      const rows = state.multiviewEditor.slots
+        .slice()
+        .sort((a, b) => a.Index - b.Index)
+        .map(slot => {
+          const activeClass = slot.Index === state.multiviewEditor.selectedSlotIndex ? " active" : "";
+          return `
+            <div class="mv-slot-row${activeClass}" data-slot-index="${slot.Index}">
+              <div class="mv-slot-row-top">
+                <strong>Slot ${slot.Index}</strong>
+                <input class="mv-z-input" type="number" step="1" data-z-input="${slot.Index}" value="${slot.Z}" />
+              </div>
+              <div class="mv-hint">X:${Math.round(slot.X)} Y:${Math.round(slot.Y)} W:${Math.round(slot.Width)} H:${Math.round(slot.Height)}</div>
+            </div>
+          `;
+        }).join("");
+      els.mvSidebar.innerHTML = rows || '<div class="mv-hint">No slots available.</div>';
+
+      els.mvSidebar.querySelectorAll("[data-slot-index]").forEach(row => {
+        row.addEventListener("click", () => {
+          const idx = Number(row.getAttribute("data-slot-index"));
+          state.multiviewEditor.selectedSlotIndex = idx;
+          renderMultiviewEditor();
+        });
+      });
+
+      els.mvSidebar.querySelectorAll("[data-z-input]").forEach(input => {
+        input.addEventListener("change", () => {
+          const idx = Number(input.getAttribute("data-z-input"));
+          const slot = getSlotByIndex(idx);
+          if (!slot) return;
+          slot.Z = Number(input.value || 0);
+          renderMultiviewEditor();
+        });
+      });
+    }
+
+    function beginSlotInteraction(event, slotIndex, mode, handleDir = "se"){
+      if (!state.multiviewEditor) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const slot = getSlotByIndex(slotIndex);
+      if (!slot) return;
+      const rect = els.mvStage.getBoundingClientRect();
+      state.multiviewEditor.selectedSlotIndex = slotIndex;
+      state.multiviewEditor.drag = {
+        mode,
+        slotIndex,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        startX: slot.X,
+        startY: slot.Y,
+        startW: slot.Width,
+        startH: slot.Height,
+        handleDir,
+        stageWidth: rect.width,
+        stageHeight: rect.height
+      };
+
+      const onMove = moveEvent => {
+        const drag = state.multiviewEditor.drag;
+        const liveSlot = getSlotByIndex(drag.slotIndex);
+        if (!drag || !liveSlot) return;
+        const dx = (moveEvent.clientX - drag.startClientX) * (state.multiviewEditor.baseWidth / drag.stageWidth);
+        const dy = (moveEvent.clientY - drag.startClientY) * (state.multiviewEditor.baseHeight / drag.stageHeight);
+        if (drag.mode === "drag") {
+          liveSlot.X = Math.max(0, Math.min(drag.startX + dx, state.multiviewEditor.baseWidth - liveSlot.Width));
+          liveSlot.Y = Math.max(0, Math.min(drag.startY + dy, state.multiviewEditor.baseHeight - liveSlot.Height));
+        } else {
+          const minSize = 8;
+          const baseW = state.multiviewEditor.baseWidth;
+          const baseH = state.multiviewEditor.baseHeight;
+          let newX = drag.startX;
+          let newY = drag.startY;
+          let newW = drag.startW;
+          let newH = drag.startH;
+
+          if (drag.handleDir === "se") {
+            newW = drag.startW + dx;
+            newH = drag.startH + dy;
+          } else if (drag.handleDir === "sw") {
+            newW = drag.startW - dx;
+            newH = drag.startH + dy;
+            newX = drag.startX + dx;
+          } else if (drag.handleDir === "ne") {
+            newW = drag.startW + dx;
+            newH = drag.startH - dy;
+            newY = drag.startY + dy;
+          } else if (drag.handleDir === "nw") {
+            newW = drag.startW - dx;
+            newH = drag.startH - dy;
+            newX = drag.startX + dx;
+            newY = drag.startY + dy;
+          }
+
+          if (state.multiviewEditor.keepAspectRatio) {
+            const ratio = drag.startW / Math.max(1, drag.startH);
+            const wDelta = Math.abs(newW - drag.startW);
+            const hDelta = Math.abs(newH - drag.startH);
+            if (wDelta >= hDelta) {
+              newH = newW / ratio;
+            } else {
+              newW = newH * ratio;
+            }
+
+            if (drag.handleDir.includes("w")) {
+              newX = drag.startX + (drag.startW - newW);
+            }
+            if (drag.handleDir.includes("n")) {
+              newY = drag.startY + (drag.startH - newH);
+            }
+          }
+
+          if (newX < 0) {
+            newW += newX;
+            newX = 0;
+          }
+          if (newY < 0) {
+            newH += newY;
+            newY = 0;
+          }
+          if (newX + newW > baseW) {
+            newW = baseW - newX;
+          }
+          if (newY + newH > baseH) {
+            newH = baseH - newY;
+          }
+
+          if (newW < minSize) {
+            if (drag.handleDir.includes("w")) {
+              newX = Math.max(0, Math.min(baseW - minSize, newX - (minSize - newW)));
+            }
+            newW = minSize;
+          }
+          if (newH < minSize) {
+            if (drag.handleDir.includes("n")) {
+              newY = Math.max(0, Math.min(baseH - minSize, newY - (minSize - newH)));
+            }
+            newH = minSize;
+          }
+
+          liveSlot.X = Math.max(0, Math.min(newX, baseW - minSize));
+          liveSlot.Y = Math.max(0, Math.min(newY, baseH - minSize));
+          liveSlot.Width = Math.max(minSize, Math.min(newW, baseW - liveSlot.X));
+          liveSlot.Height = Math.max(minSize, Math.min(newH, baseH - liveSlot.Y));
+        }
+        renderMultiviewEditor(false);
+      };
+
+      const onUp = () => {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        if (state.multiviewEditor) {
+          state.multiviewEditor.drag = null;
+        }
+        renderMultiviewEditor();
+      };
+
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+      renderMultiviewEditor();
+    }
+
+    function renderMultiviewEditor(renderSidebar = true){
+      if (!state.multiviewEditor) return;
+      const editor = state.multiviewEditor;
+      els.mvStage.innerHTML = "";
+      editor.slots
+        .slice()
+        .sort((a, b) => a.Z - b.Z)
+        .forEach(slot => {
+          const slotDiv = document.createElement("div");
+          slotDiv.className = "mv-slot" + (slot.Index === editor.selectedSlotIndex ? " active" : "");
+          slotDiv.style.left = `${(slot.X / editor.baseWidth) * 100}%`;
+          slotDiv.style.top = `${(slot.Y / editor.baseHeight) * 100}%`;
+          slotDiv.style.width = `${(slot.Width / editor.baseWidth) * 100}%`;
+          slotDiv.style.height = `${(slot.Height / editor.baseHeight) * 100}%`;
+          slotDiv.style.zIndex = String(100 + slot.Z);
+
+          const label = document.createElement("div");
+          label.className = "mv-slot-label";
+          label.textContent = `#${slot.Index} z:${slot.Z}`;
+
+          slotDiv.addEventListener("mousedown", event => beginSlotInteraction(event, slot.Index, "drag"));
+
+          ["nw", "ne", "sw", "se"].forEach(dir => {
+            const handle = document.createElement("div");
+            handle.className = `mv-slot-handle ${dir}`;
+            handle.addEventListener("mousedown", event => beginSlotInteraction(event, slot.Index, "resize", dir));
+            slotDiv.appendChild(handle);
+          });
+
+          slotDiv.appendChild(label);
+          els.mvStage.appendChild(slotDiv);
+        });
+
+      if (renderSidebar) {
+        renderMultiviewSidebar();
+      }
+      updateMvStatus();
+    }
+
+    async function openMultiviewModal(){
+      const selectedId = getCurrentMultiviewNodeId();
+      if (!selectedId) {
+        log("Select a Multiview node first.");
+        return;
+      }
+      try {
+        const payload = await api("/api/nodes/multiview");
+        const nodeState = payload && payload.Nodes ? payload.Nodes[selectedId] : null;
+        if (!nodeState) {
+          log("Multiview state not found for selected node.");
+          return;
+        }
+        state.multiviewEditor = buildMultiviewEditorState(nodeState);
+        els.mvModalTitle.textContent = `Multiview Layout Editor - ${nodeState.Name || selectedId.slice(0, 8)}`;
+        updateAspectButton();
+        renderMultiviewEditor();
+        els.multiviewModal.classList.add("open");
+      } catch (err) {
+        log(`Failed to load multiview layout: ${err.message}`);
+      }
+    }
+
+    function closeMultiviewModal(){
+      els.multiviewModal.classList.remove("open");
+      state.multiviewEditor = null;
+      els.mvStage.innerHTML = "";
+      els.mvSidebar.innerHTML = "";
+    }
+
+    async function applyMultiviewLayout(){
+      if (!state.multiviewEditor) return;
+      try {
+        const slotsPayload = state.multiviewEditor.slots
+          .slice()
+          .sort((a, b) => a.Index - b.Index)
+          .map(slot => ({
+            Index: slot.Index,
+            X: Math.round(slot.X),
+            Y: Math.round(slot.Y),
+            Width: Math.max(1, Math.round(slot.Width)),
+            Height: Math.max(1, Math.round(slot.Height)),
+            Z: Math.round(slot.Z)
+          }));
+
+        await api("/api/nodes/multiview", {
+          method: "POST",
+          body: {
+            Node: state.multiviewEditor.nodeId,
+            Layout: "CUSTOM",
+            Slots: slotsPayload
+          }
+        });
+        log("Multiview layout applied.");
+        closeMultiviewModal();
+        await refreshAll();
+      } catch (err) {
+        log(`Failed to apply multiview layout: ${err.message}`);
+      }
+    }
+
+    function bindUI(){
+      els.loginBtn.addEventListener("click", async () => {
+        const u = (els.username.value || "").trim();
+        const p = els.password.value || "";
+        if (u !== LOGIN_USER || p !== LOGIN_PASS) {
+          els.loginError.textContent = "Invalid credentials.";
+          return;
+        }
+        window.localStorage.setItem(AUTH_KEY, "1");
+        els.loginError.textContent = "";
+        showApp(true);
+        await refreshAll();
+      });
+
+      els.logoutBtn.addEventListener("click", () => {
+        window.localStorage.removeItem(AUTH_KEY);
+        showApp(false);
+      });
+
+      els.refreshBtn.addEventListener("click", refreshAll);
+      els.editMultiviewBtn.addEventListener("click", openMultiviewModal);
+      els.mvCloseBtn.addEventListener("click", closeMultiviewModal);
+      els.mvApplyBtn.addEventListener("click", applyMultiviewLayout);
+      els.mvNormalizeZBtn.addEventListener("click", () => {
+        normalizeZOrder();
+        renderMultiviewEditor();
+      });
+      els.mvAspectBtn.addEventListener("click", () => {
+        if (!state.multiviewEditor) return;
+        state.multiviewEditor.keepAspectRatio = !state.multiviewEditor.keepAspectRatio;
+        updateAspectButton();
+        updateMvStatus();
+      });
+      els.multiviewModal.addEventListener("click", event => {
+        if (event.target === els.multiviewModal) {
+          closeMultiviewModal();
+        }
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && els.multiviewModal.classList.contains("open")) {
+          closeMultiviewModal();
+        }
+      });
+      els.createNodeBtn.addEventListener("click", createNode);
+      els.createLinkBtn.addEventListener("click", createLink);
+      els.removeLinkBtn.addEventListener("click", removeLink);
+      els.playBtn.addEventListener("click", () => setTransport(true));
+      els.pauseBtn.addEventListener("click", () => setTransport(false));
+
+      els.loadTemplateBtn.addEventListener("click", () => {
+        const type = els.nodeTypeSelect.value;
+        renderNodeForm(state.nodeDetailsCache[type] || []);
+      });
+
+      els.nodeTypeSelect.addEventListener("change", () => {
+        loadNodeDetails(els.nodeTypeSelect.value);
+      });
+
+      els.originSelect.addEventListener("change", () => {
+        updateMultiviewButton();
+      });
+    }
+
+    async function boot(){
+      bindUI();
+      if (!authValid()) {
+        showApp(false);
+        return;
+      }
+      showApp(true);
+      await loadNodeDetails(els.nodeTypeSelect.value);
+      await refreshAll();
+      setInterval(refreshAll, 5000);
+    }
+
+    boot();
+  </script>
+</body>
+</html>

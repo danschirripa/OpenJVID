@@ -26,10 +26,13 @@ import com.javashell.video.VideoProcessor;
 import com.javashell.video.digestors.AudioExtractorDigestor;
 import com.javashell.video.digestors.AudioInjectorDigestor;
 import com.javashell.video.digestors.AutoFramingDigestor;
+import com.javashell.video.digestors.BackgroundRemoverDigestor;
+import com.javashell.video.digestors.CropDigestor;
 import com.javashell.video.digestors.FaceSetPaintingDigestor;
 import com.javashell.video.digestors.MatrixDigestor;
 import com.javashell.video.digestors.MultiviewDigestor;
 import com.javashell.video.digestors.OpenCVDeepLearningFaceDetectorDigestor;
+import com.javashell.video.digestors.PictureAdjustmentDigestor;
 import com.javashell.video.digestors.ScalingDigestor;
 
 public class DigestNodeFactory {
@@ -149,6 +152,80 @@ public class DigestNodeFactory {
 		scaler.open();
 
 		return scalerNodeComp;
+	}
+
+	@TypeName(typeName = "Crop", nodeType = NodeType.Transceiver)
+	public static jVidNodeComponent<VideoProcessor> createCropDigestor(@Label(label = "Resolution") Dimension resolution,
+			@Label(label = "Crop X") int cropX, @Label(label = "Crop Y") int cropY,
+			@Label(label = "Crop Width") int cropWidth, @Label(label = "Crop Height") int cropHeight,
+			@Label(label = "Name") String name, JNodeFlowPane flowPane) {
+		CropDigestor cropDigestor = new CropDigestor(resolution, cropX, cropY, cropWidth, cropHeight);
+		FlowNode<VideoProcessor> cropNode = new VideoFlowNode(cropDigestor, null, null);
+		jVidNodeComponent<VideoProcessor> cropNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane, cropNode);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>("Crop",
+				resolution, cropX, cropY, cropWidth, cropHeight, name);
+
+		cropNodeComp.setNodeType(NodeType.Transceiver);
+		cropNodeComp.setNodeName((name == null || name.isBlank()) ? "Crop" : name);
+		cropNodeComp.setNodeComponentDescriptor(desc);
+
+		cropDigestor.open();
+
+		return cropNodeComp;
+	}
+
+	@TypeName(typeName = "Background Remover", nodeType = NodeType.Transceiver)
+	public static jVidNodeComponent<VideoProcessor> createBackgroundRemoverDigestor(
+			@Label(label = "Resolution") Dimension resolution, @Label(label = "Key Color") String keyColor,
+			@Label(label = "Tolerance") int tolerance, @Label(label = "Softness") int softness,
+			@Label(label = "Name") String name, @Label(label = "Mode") String mode,
+			@Label(label = "Face Padding") int facePadding, JNodeFlowPane flowPane) {
+		BackgroundRemoverDigestor remover = new BackgroundRemoverDigestor(resolution, keyColor, tolerance, softness,
+				mode, facePadding);
+		FlowNode<VideoProcessor> removerNode = new VideoFlowNode(remover, null, null);
+		jVidNodeComponent<VideoProcessor> removerNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane,
+				removerNode);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"Background Remover", resolution, keyColor, tolerance, softness, name, mode, facePadding);
+
+		removerNodeComp.setNodeType(NodeType.Transceiver);
+		removerNodeComp.setNodeName((name == null || name.isBlank()) ? "Background Remover" : name);
+		removerNodeComp.setNodeComponentDescriptor(desc);
+
+		remover.open();
+
+		return removerNodeComp;
+	}
+
+	@TypeName(typeName = "Picture Adjustment", nodeType = NodeType.Transceiver)
+	public static jVidNodeComponent<VideoProcessor> createPictureAdjustmentDigestor(
+			@Label(label = "Resolution") Dimension resolution,
+			@Label(label = "Brightness (%)") float brightnessPercent,
+			@Label(label = "Contrast (%)") float contrastPercent,
+			@Label(label = "Saturation (%)") float saturationPercent,
+			@Label(label = "Red Gain (%)") float redGainPercent,
+			@Label(label = "Green Gain (%)") float greenGainPercent,
+			@Label(label = "Blue Gain (%)") float blueGainPercent, @Label(label = "Name") String name,
+			JNodeFlowPane flowPane) {
+		PictureAdjustmentDigestor adjustment = new PictureAdjustmentDigestor(resolution, brightnessPercent,
+				contrastPercent, saturationPercent, redGainPercent, greenGainPercent, blueGainPercent);
+		FlowNode<VideoProcessor> adjustmentNode = new VideoFlowNode(adjustment, null, null);
+		jVidNodeComponent<VideoProcessor> adjustmentNodeComp = new jVidNodeComponent<VideoProcessor>(flowPane,
+				adjustmentNode);
+
+		jVidNodeComponentDescriptor<VideoProcessor> desc = new jVidNodeComponentDescriptor<VideoProcessor>(
+				"Picture Adjustment", resolution, brightnessPercent, contrastPercent, saturationPercent,
+				redGainPercent, greenGainPercent, blueGainPercent, name);
+
+		adjustmentNodeComp.setNodeType(NodeType.Transceiver);
+		adjustmentNodeComp.setNodeName((name == null || name.isBlank()) ? "Picture Adjustment" : name);
+		adjustmentNodeComp.setNodeComponentDescriptor(desc);
+
+		adjustment.open();
+
+		return adjustmentNodeComp;
 	}
 
 	@TypeName(typeName = "Face Detector", nodeType = NodeType.Transceiver)

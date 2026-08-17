@@ -24,10 +24,18 @@ import com.sun.net.httpserver.HttpHandler;
  */
 public class HTTPServlet implements HttpHandler {
 
-	// Cached HTML content loaded from assets/rest_console.html (classpath or file)
+	// Cached HTML content loaded from classpath or assets folder.
 	private final String html;
+	private final String resourceName;
+	private final String pageTitle;
 
 	public HTTPServlet() {
+		this("rest_console.html", "OpenJVID REST Console");
+	}
+
+	public HTTPServlet(String resourceName, String pageTitle) {
+		this.resourceName = resourceName;
+		this.pageTitle = pageTitle;
 		this.html = loadHtml();
 	}
 
@@ -54,7 +62,7 @@ public class HTTPServlet implements HttpHandler {
 	private String loadHtml() {
 		// First, try to load from classpath so that the file can be packaged inside a
 		// JAR
-		String resourcePath = "/rest_console.html";
+		String resourcePath = "/" + resourceName;
 		try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
 			if (in != null) {
 				byte[] bytes = in.readAllBytes();
@@ -66,7 +74,7 @@ public class HTTPServlet implements HttpHandler {
 
 		// Fallback: try to load from the repository assets folder relative to working
 		// dir
-		Path p = Paths.get("assets", "rest_console.html");
+		Path p = Paths.get("assets", resourceName);
 		try {
 			if (Files.exists(p)) {
 				byte[] bytes = Files.readAllBytes(p);
@@ -77,6 +85,8 @@ public class HTTPServlet implements HttpHandler {
 		}
 
 		// As a last resort, return a minimal built-in HTML informing about missing file
-		return "<!doctype html><html><head><meta charset=\"utf-8\"><title>OpenJVID REST Console</title></head><body><h2>OpenJVID REST Console</h2><p>rest_console.html not found in classpath or assets folder.</p></body></html>";
+		return "<!doctype html><html><head><meta charset=\"utf-8\"><title>" + pageTitle
+				+ "</title></head><body><h2>" + pageTitle + "</h2><p>" + resourceName
+				+ " not found in classpath or assets folder.</p></body></html>";
 	}
 }

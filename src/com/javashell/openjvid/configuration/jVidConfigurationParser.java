@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -215,15 +216,15 @@ public class jVidConfigurationParser {
 				unrealizedMatrices.put(nodeID, md);
 				continue;
 			}
-			// Insert the flowPane parameter as the last index
-			parameters[parameters.length - 1] = flowPane;
 			// Load the associated callback method for creation
 			Method creationMethod = AddComponentDialog.callBackMethods.get(contentClass);
+			final Object[] invocationParameters = expandInvocationParameters(creationMethod, parameters, flowPane);
 			// Create the jVidNodeComponent
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
 					try {
-						jVidNodeComponent<?> vidComp = (jVidNodeComponent<?>) creationMethod.invoke(null, parameters);
+						jVidNodeComponent<?> vidComp = (jVidNodeComponent<?>) creationMethod.invoke(null,
+								invocationParameters);
 						vidComp.setLocation(x, y);
 						compsByUUID.put(nodeID, vidComp);
 						flowPane.add(vidComp);
@@ -289,6 +290,38 @@ public class jVidConfigurationParser {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static Object[] expandInvocationParameters(Method creationMethod, Object[] loadedParameters,
+			JNodeFlowPane flowPane) {
+		Parameter[] methodParameters = creationMethod.getParameters();
+		Object[] invocation = new Object[methodParameters.length];
+		int loadedIndex = 0;
+		for (int i = 0; i < methodParameters.length; i++) {
+			if (methodParameters[i].getType().isAssignableFrom(JNodeFlowPane.class)) {
+				invocation[i] = flowPane;
+				continue;
+			}
+			if (loadedIndex < loadedParameters.length) {
+				invocation[i] = loadedParameters[loadedIndex++];
+			} else {
+				invocation[i] = defaultValueForType(methodParameters[i].getType());
+			}
+		}
+		return invocation;
+	}
+
+	private static Object defaultValueForType(Class<?> type) {
+		if (type == String.class) {
+			return "";
+		}
+		if (type == int.class) {
+			return 0;
+		}
+		if (type == float.class) {
+			return 0f;
+		}
+		return null;
 	}
 
 	/**
